@@ -29,8 +29,10 @@
    (fn [result method response]
      (assoc-in result
                [method :handler]
-               (fn [& _]
-                 response)))
+               (if (fn? response)
+                 response
+                 (fn [& _]
+                   response))))
    {}
    method->response))
 
