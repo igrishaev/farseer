@@ -1,4 +1,5 @@
-(ns farseer.stub-test
+(ns ^:integration
+    farseer.stub-test
   (:require
    [farseer.stub :as stub]
 

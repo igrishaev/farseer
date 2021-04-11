@@ -216,6 +216,14 @@
   (update-in this [:rpc :method] keyword))
 
 
+(defmacro with-try
+  [x [e] & body]
+  `(try
+     ~x
+     (catch Throwable ~e
+       ~@body)))
+
+
 (defn process-rpc-single
   [this]
   (-> this
@@ -225,9 +233,8 @@
       execute-method
       validate-output
       compose-response
-      (try
-        (catch Throwable e
-          (rpc-single-error-handler e)))))
+      (with-try [e]
+        (rpc-single-error-handler e))))
 
 
 (defn guess-http-status
@@ -363,17 +370,16 @@
         step-3-process-rpc
         step-4-http-response
 
-        (try
-          (catch Throwable e
-            (log/error e)
+        (with-try [e]
 
-            (let [{:keys [status code message data]}
-                  (ex-data e)]
+          (log/error e)
+          (let [{:keys [status code message data]}
+                (ex-data e)]
 
-              {:status (or status 500)
-               :body {:error {:code code
-                              :message message
-                              :data data}}}))))))
+            {:status (or status 500)
+             :body {:error {:code code
+                            :message message
+                            :data data}}})))))
 
 
 
