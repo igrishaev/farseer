@@ -41,11 +41,7 @@
 
 
 (def config
-  {:overrides
-   {:math/sum
-    {:allow-batch? false}}
-
-   :handlers
+  {:handlers
    {:math/sum
     {:handler #'rpc-sum
      :spec-in :math/sum.in

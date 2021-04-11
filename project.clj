@@ -11,13 +11,16 @@
   [[lein-sub "0.3.0"]
    [exoscale/lein-replace "0.1.1"]]
 
-  :sub ["farseer-handler"]
+  :sub ["farseer-handler"
+        "farseer-stub"]
 
   :dependencies
-  [[farseer-handler]]
+  [[farseer-handler]
+   [farseer-stub]]
 
   :managed-dependencies
   [[farseer-handler :version]
+   [farseer-stub :version]
 
    [org.clojure/clojure "1.10.1"]
    [org.clojure/tools.logging "1.1.0"]
