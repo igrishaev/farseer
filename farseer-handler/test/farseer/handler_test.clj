@@ -227,6 +227,52 @@
          response))))
 
 
+(deftest test-handler-custom-context
+
+  (let [rpc {:id 1
+             :method "custom/context"
+             :params [1 2]
+             :version "2.0"}
+
+        capture (atom nil)
+
+        config
+        (assoc-in config [:handlers :custom/context :handler]
+                  (fn [& args]
+                    (reset! capture args)
+                    {:foo 1}))
+
+
+        request {:params rpc}
+        handler (make-handler config {:this "foo"
+                                      :that "bar"})
+
+        response (handler request)
+
+        [context & args] @capture]
+
+    (is (= {:this "foo"
+            :that "bar"
+            :request {:params
+                      {:id 1
+                       :method "custom/context"
+                       :params [1 2]
+                       :version "2.0"}}}
+
+           context))
+
+    (is (= [1 2] args))
+
+    (is (=
+
+         {:status 200
+          :body {:id 1
+                 :jsonrpc "2.0"
+                 :result {:foo 1}}}
+
+         response))))
+
+
 (deftest test-handler-wrong-payload
 
   (let [rpc {:foo 42 :test "aa"}
@@ -239,14 +285,14 @@
     (is (=
 
          {:id nil
-           :jsonrpc "2.0"
-           :error
-           {:code -32600,
-            :message "Invalid Request"
-            :data
-            {:explain
-             "[:foo 42] - failed: map? in: [0] at: [:batch] spec: :farseer.spec.handler/rpc-single\n[:test \"aa\"] - failed: map? in: [1] at: [:batch] spec: :farseer.spec.handler/rpc-single\n{:foo 42, :test \"aa\"} - failed: (contains? % :version) at: [:single] spec: :farseer.spec.handler/rpc-single\n{:foo 42, :test \"aa\"} - failed: (contains? % :method) at: [:single] spec: :farseer.spec.handler/rpc-single\n",
-             :method nil}}}
+          :jsonrpc "2.0"
+          :error
+          {:code -32600,
+           :message "Invalid Request"
+           :data
+           {:explain
+            "[:foo 42] - failed: map? in: [0] at: [:batch] spec: :farseer.spec.handler/rpc-single\n[:test \"aa\"] - failed: map? in: [1] at: [:batch] spec: :farseer.spec.handler/rpc-single\n{:foo 42, :test \"aa\"} - failed: (contains? % :version) at: [:single] spec: :farseer.spec.handler/rpc-single\n{:foo 42, :test \"aa\"} - failed: (contains? % :method) at: [:single] spec: :farseer.spec.handler/rpc-single\n",
+            :method nil}}}
 
          response))))
 

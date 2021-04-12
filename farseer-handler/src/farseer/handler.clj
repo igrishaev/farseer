@@ -123,27 +123,19 @@
 
 
 (defn execute-method
-  [{:as this :keys [config request rpc handler-map]}]
+  [{:as this :keys [context config rpc handler-map]}]
 
   (let [{:keys [params]} rpc
         {:keys [handler]} handler-map
 
         ;; TODO assert handler (symbol)
 
-        {:keys [pass-request-to-handler?]}
-        config
-
         arg-list
         (if (vector? params)
           params [params])
 
-        arg-list
-        (if pass-request-to-handler?
-          (cons request arg-list)
-          arg-list)
-
         result
-        (apply handler arg-list)]
+        (apply handler context arg-list)]
 
     (assoc this :result result)))
 
@@ -353,8 +345,7 @@
 
 
 (def config-default
-  {:pass-request-to-handler? true
-   :data-field :params
+  {:data-field :params
    :validate-in-spec? true
    :validate-out-spec? true
    :allow-batch? true
@@ -363,25 +354,34 @@
 
 
 (defn make-handler
-  [config]
 
-  (fn [request]
+  ([config]
+   (make-handler config nil))
 
-    (let [config
-          (merge config-default config)
+  ([config context]
 
-          this
-          {:config config :request request}]
+   (let [config
+         (merge config-default config)]
 
-      (-> this
+     (fn [request]
 
-          step-1-parse-payload
-          step-2-check-batch
-          step-3-process-rpc
-          step-4-http-response
+       (let [context
+             (assoc context :request request)
 
-          (with-try [e]
-            (rpc-error-handler this e))))))
+             this
+             {:config config
+              :request request
+              :context context}]
+
+         (-> this
+
+             step-1-parse-payload
+             step-2-check-batch
+             step-3-process-rpc
+             step-4-http-response
+
+             (with-try [e]
+               (rpc-error-handler this e))))))))
 
 
 
