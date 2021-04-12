@@ -382,8 +382,10 @@
              step-4-http-response
 
              (with-try [e]
-               (rpc-error-handler this e))))))))
-
+               (let [result (rpc-error-handler this e)
+                     status (guess-http-status result)]
+                 {:status status
+                  :body result}))))))))
 
 
 ;;;;;;;;;

@@ -30,6 +30,8 @@
           resp
           (client/call cfg :user/get-by-id 42)
 
-          resp (select-keys resp [:status :body])]
+          ;; resp (select-keys resp [:status :body])
+          ]
 
-      (is (= 1 resp)))))
+      (is (= {:name "Ivan", :email "test@test.com"}
+             resp)))))

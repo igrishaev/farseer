@@ -284,15 +284,17 @@
 
     (is (=
 
-         {:id nil
-          :jsonrpc "2.0"
-          :error
-          {:code -32600,
-           :message "Invalid Request"
-           :data
-           {:explain
-            "[:foo 42] - failed: map? in: [0] at: [:batch] spec: :farseer.spec.handler/rpc-single\n[:test \"aa\"] - failed: map? in: [1] at: [:batch] spec: :farseer.spec.handler/rpc-single\n{:foo 42, :test \"aa\"} - failed: (contains? % :version) at: [:single] spec: :farseer.spec.handler/rpc-single\n{:foo 42, :test \"aa\"} - failed: (contains? % :method) at: [:single] spec: :farseer.spec.handler/rpc-single\n",
-            :method nil}}}
+         {:status 400,
+           :body
+           {:id nil
+            :jsonrpc "2.0"
+            :error
+            {:code -32600,
+             :message "Invalid Request"
+             :data
+             {:explain
+              "[:foo 42] - failed: map? in: [0] at: [:batch] spec: :farseer.spec.handler/rpc-single\n[:test \"aa\"] - failed: map? in: [1] at: [:batch] spec: :farseer.spec.handler/rpc-single\n{:foo 42, :test \"aa\"} - failed: (contains? % :version) at: [:single] spec: :farseer.spec.handler/rpc-single\n{:foo 42, :test \"aa\"} - failed: (contains? % :method) at: [:single] spec: :farseer.spec.handler/rpc-single\n",
+              :method nil}}}}
 
          response))))
 

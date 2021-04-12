@@ -27,8 +27,8 @@
 
 (def config-defaults
   {
-   ;; :rpc/fn-before-send identity
-   ;; :rpc/fn-id          :int
+   :rpc/fn-before-send identity
+   :rpc/fn-id          :int
 
    ;; :rpc/multi? false
    ;; :rpc/fn-dispatch-service get-ns
@@ -36,13 +36,13 @@
 
    :method             :post
    :url                "http://127.0.0.1:8008/api"
-   ;; :headers            {:user-agent "jsonrpc.client"}
-   ;; :socket-timeout     5000
-   ;; :connection-timeout 5000
-   ;; :throw-exceptions?  false
+   :headers            {:user-agent "jsonrpc.client"}
+   :socket-timeout     5000
+   :connection-timeout 5000
+   :throw-exceptions?  false
    :as                 :json
    :content-type       :json
-   ;; :coerce             :always
+   :coerce             :always
 
    ;; conn manager
 
@@ -70,8 +70,7 @@
          (generate-id fn-id)
 
          payload
-         (cond-> {;; :jsonrpc "2.0"
-                  :version "2.0"
+         (cond-> {:version "2.0"
                   :method method}
            id
            (assoc :id id)
@@ -83,13 +82,11 @@
          (-> config
              (assoc :form-params payload))]
 
-     (client/request request)
-
-
-     #_
      (-> request
-         ;; fn-before-send
-         client/request))))
+         fn-before-send
+         client/request
+         :body
+         :result))))
 
 
 (defn call

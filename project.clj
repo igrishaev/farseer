@@ -16,9 +16,20 @@
         "farseer-stub"]
 
   :dependencies
-  [[farseer-handler]
-   [farseer-client]
-   [farseer-stub]]
+  [
+   ;; [farseer-handler]
+   ;; [farseer-client]
+   ;; [farseer-stub]
+
+   [org.clojure/clojure]
+   [org.clojure/tools.logging]
+   [clj-http]
+   [cheshire]
+   [ring/ring-jetty-adapter]
+   [ring/ring-json]
+   [ch.qos.logback/logback-classic]
+
+   ]
 
   :managed-dependencies
   [[farseer-handler :version]
