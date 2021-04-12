@@ -71,11 +71,9 @@
 
 
 (defn rpc-error!
-  [params]
+  [{:as params :keys [type]}]
 
-  (let [{:keys [type]} params
-
-        rpc-error
+  (let [rpc-error
         (or (get rpc-errors type)
             (get rpc-errors :internal-error))
 
@@ -88,23 +86,20 @@
 (defn find-method
   [{:as this :keys [config rpc]}]
 
-  (let [{:keys [id method]} rpc
+  (let [{:keys [method]} rpc
         {:keys [handlers]} config
 
         handler-map (get handlers method)]
 
     (if-not handler-map
-      (rpc-error! {:id id
-                   :type :not-found
-                   :data {:method method}})
-      (assoc this
-             :handler-map handler-map))))
+      (rpc-error! {:type :not-found})
+      (assoc this :handler-map handler-map))))
 
 
 (defn validate-params
   [{:as this :keys [config rpc handler-map]}]
 
-  (let [{:keys [id method params]}
+  (let [{:keys [params]}
         rpc
 
         {:keys [validate-in-spec?]}
@@ -122,10 +117,8 @@
           (explain-str spec-in params))]
 
     (if explain
-      (rpc-error! {:id id
-                   :type :invalid-params
-                   :data {:method method
-                          :explain explain}})
+      (rpc-error! {:type :invalid-params
+                   :data {:explain explain}})
       this)))
 
 
@@ -156,13 +149,11 @@
 
 
 (defn validate-output
-  [{:as this :keys [config result rpc handler-map]}]
+  [{:as this :keys [config result handler-map]}]
 
   (let [{:keys [spec-out]} handler-map
 
         {:keys [validate-out-spec?]} config
-
-        {:keys [id method]} rpc
 
         validate?
         (and validate-out-spec? spec-out)
@@ -172,12 +163,8 @@
           (explain-str spec-out result))]
 
     (if explain
-      ;; TODO log
-
-      (rpc-error! {:id id
-                   :type :internal-error
-                   :data {:method method}})
-
+      ;; log?
+      (rpc-error! {:type :internal-error})
       this)))
 
 
@@ -196,12 +183,32 @@
     :invalid-params})
 
 
-(defn rpc-single-error-handler
-  [e]
-  (let [{:keys [id code message data]}
-        (ex-data e)]
+(defn rpc-error-handler
+  [this e]
+
+  (let [{:keys [rpc]} this
+        {:keys [id method]} rpc
+
+        err-data (ex-data e)
+
+        {:keys [type]} err-data
+
+        rpc-error
+        (or
+         (get rpc-errors type)
+         (get rpc-errors :internal-error))
+
+        rpc-error
+        (merge rpc-error err-data)
+
+        {:keys [code message data]}
+        rpc-error
+
+        data
+        (assoc data :method method)]
 
     (when-not (contains? types-no-log type)
+      ;; log method, id, etc
       (log/error e))
 
     {:id id
@@ -234,7 +241,7 @@
       validate-output
       compose-response
       (with-try [e]
-        (rpc-single-error-handler e))))
+        (rpc-error-handler this e))))
 
 
 (defn guess-http-status
@@ -252,15 +259,12 @@
 
         batch-size (count rpc)
 
-        {:keys [id]} rpc
-
         exeeded?
         (when max-batch-size
           (> batch-size max-batch-size))]
 
     (if exeeded?
-      (rpc-error! {:id id
-                   :type :invalid-params
+      (rpc-error! {:type :invalid-params
                    :message "Batch size is too large"})
       this)))
 
@@ -360,26 +364,24 @@
 
 (defn make-handler
   [config]
+
   (fn [request]
 
-    (-> {:config (merge config-default config)
-         :request request}
+    (let [config
+          (merge config-default config)
 
-        step-1-parse-payload
-        step-2-check-batch
-        step-3-process-rpc
-        step-4-http-response
+          this
+          {:config config :request request}]
 
-        (with-try [e]
+      (-> this
 
-          (log/error e)
-          (let [{:keys [status code message data]}
-                (ex-data e)]
+          step-1-parse-payload
+          step-2-check-batch
+          step-3-process-rpc
+          step-4-http-response
 
-            {:status (or status 500)
-             :body {:error {:code code
-                            :message message
-                            :data data}}})))))
+          (with-try [e]
+            (rpc-error-handler this e))))))
 
 
 

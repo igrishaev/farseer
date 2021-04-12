@@ -124,7 +124,7 @@
                  :jsonrpc "2.0"
                  :error {:code -32603
                          :message "Internal error"
-                         :data {:method :user/create}}}}
+                         :data {:method "user/create"}}}}
 
            response))))
 
@@ -161,7 +161,7 @@
              :error {:code -32602
                      :message "Invalid params"
                      :data
-                     {:method :math/sum
+                     {:method "math/sum"
                       :explain
                       "nil - failed: number? in: [1] at: [1] spec: :math/sum.in\n"}}}}
 
@@ -220,9 +220,33 @@
             :error
             {:code -32602
              :message "Invalid params"
-             :data {:method :math/sum
+             :data {:method "math/sum"
                     :explain "nil - failed: number? in: [1] at: [1] spec: :math/sum.in\n"}}}
            {:id 3 :jsonrpc "2.0" :result 11}]}
+
+         response))))
+
+
+(deftest test-handler-wrong-payload
+
+  (let [rpc {:foo 42 :test "aa"}
+
+        request {:params rpc}
+        handler (make-handler config)
+
+        response (handler request)]
+
+    (is (=
+
+         {:id nil
+           :jsonrpc "2.0"
+           :error
+           {:code -32600,
+            :message "Invalid Request"
+            :data
+            {:explain
+             "[:foo 42] - failed: map? in: [0] at: [:batch] spec: :farseer.spec.handler/rpc-single\n[:test \"aa\"] - failed: map? in: [1] at: [:batch] spec: :farseer.spec.handler/rpc-single\n{:foo 42, :test \"aa\"} - failed: (contains? % :version) at: [:single] spec: :farseer.spec.handler/rpc-single\n{:foo 42, :test \"aa\"} - failed: (contains? % :method) at: [:single] spec: :farseer.spec.handler/rpc-single\n",
+             :method nil}}}
 
          response))))
 

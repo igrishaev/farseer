@@ -108,9 +108,9 @@
 
         (is (= {:status 500
                 :body
-                {:id nil
+                {:id 1
                  :jsonrpc "2.0"
                  :error {:code nil
                          :message nil
-                         :data nil}}}
+                         :data {:method "some/failure"}}}}
                response))))))
