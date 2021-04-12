@@ -11,7 +11,8 @@
   :profiles
   {:dev
    {:dependencies
-    [[ch.qos.logback/logback-classic]]}}
+    [[ch.qos.logback/logback-classic]
+     [farseer-stub]]}}
 
   :dependencies
   [[org.clojure/tools.logging]
