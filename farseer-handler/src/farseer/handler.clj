@@ -8,24 +8,25 @@
 
 
 ;; make name
-;; init multiproject
 
-;; check specs in config
+;; check config with spec
+
 ;; check functions in config
 ;; auto-load func ns in config
 
-;; refactor errors
 ;; better explain (expound?)
-;; drop version
+;; rename version & opt-un
 
 ;; method overrides
 
 ;; spec for config
 ;; validate config in handler
 
-;; hadnler overrides
+;; handler overrides
 ;; discover handler
-;; rename fucntions
+;; rename functions
+
+;; no-log field maybe?
 
 
 (defn explain-str [spec data]
