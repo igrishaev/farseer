@@ -16,10 +16,12 @@
 
   :dependencies
   [[farseer-handler]
+   [farseer-client]
    [farseer-stub]]
 
   :managed-dependencies
   [[farseer-handler :version]
+   [farseer-client :version]
    [farseer-stub :version]
 
    [org.clojure/clojure "1.10.1"]
