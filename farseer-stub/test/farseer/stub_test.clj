@@ -15,6 +15,9 @@
     {:name "Ivan"
      :email "test@test.com"}
 
+    :some/invalid-params
+    (stub/->rpc-error :invalid-params)
+
     :some/failure
     (fn [& _]
       (/ 0 0))}})
@@ -106,11 +109,51 @@
                 client/request
                 (select-keys [:status :body]))]
 
-        (is (= {:status 500
-                :body
-                {:id 1
-                 :jsonrpc "2.0"
-                 :error {:code nil
-                         :message nil
-                         :data {:method "some/failure"}}}}
-               response))))))
+        (is (=
+
+             {:status 500
+              :body
+              {:id 1
+               :jsonrpc "2.0"
+               :error
+               {:code -32603
+                :message "Internal error"
+                :data {:method "some/failure"}}}}
+
+             response))))))
+
+
+(deftest test-stub-custom-invalid-params
+
+  (let [params
+        {:method :post
+         :url "http://127.0.0.1:8008/api"
+         :throw-exceptions? false
+         :as :json
+         :content-type :json
+         :coerce :always
+         :form-params
+         {:id 1
+          :version "2.0"
+          :method :some/invalid-params
+          :params [100]}}]
+
+    (stub/with-stub config
+
+      (let [response
+            (-> params
+                client/request
+                (select-keys [:status :body]))]
+
+        (is (=
+
+             {:status 400
+              :body
+              {:id 1
+               :jsonrpc "2.0"
+               :error
+               {:code -32602
+                :message "Invalid params"
+                :data {:method "some/invalid-params"}}}}
+
+             response))))))

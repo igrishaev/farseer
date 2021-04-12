@@ -43,6 +43,13 @@
       handler/make-handler))
 
 
+(defn ->rpc-error
+  [type & [params]]
+  (fn [& args]
+    (handler/rpc-error!
+     (merge params {:type type}))))
+
+
 (defn make-app
   [config]
 
