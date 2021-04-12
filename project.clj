@@ -12,6 +12,7 @@
    [exoscale/lein-replace "0.1.1"]]
 
   :sub ["farseer-handler"
+        "farseer-client"
         "farseer-stub"]
 
   :dependencies
