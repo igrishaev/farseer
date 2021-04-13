@@ -7,6 +7,10 @@
    [clojure.spec.alpha :as s]))
 
 
+;; HTTP status always 200?
+
+;; review sequential?
+
 ;; make name
 
 ;; check config with spec
