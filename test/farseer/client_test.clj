@@ -41,7 +41,7 @@
              resp)))))
 
 
-(deftest test-client-notify
+(deftest test-client-notify-ok
 
   (stub/with-stub config
 
@@ -54,3 +54,23 @@
           ]
 
       (is (nil? resp)))))
+
+
+
+(deftest test-client-batch-ok
+
+  (stub/with-stub config
+
+    (let [cfg (client/make-config nil)
+
+          resp
+          (client/batch cfg
+                        [[:user/get-by-id 1]
+                         [:user/get-by-id 2]
+                         [:user/get-by-id 3]])
+
+          ;; resp (select-keys resp [:status :body])
+          ]
+
+      (is (= 1 resp)
+       ))))

@@ -55,11 +55,50 @@
   (merge config-defaults config))
 
 
-
 (defn rebase-config [config method]
   (let [method-options
         (get-in config [:method-options method])]
     (merge config method-options)))
+
+
+(defn make-payload [config method params]
+  (let [config
+        (rebase-config config method)
+
+        {:rpc/keys [fn-id
+                    fn-before-send
+                    notify?]}
+        config
+
+        id
+        (when-not notify?
+          (generate-id fn-id))]
+
+    (cond-> {:version "2.0" ;; todo
+             :method method}
+      id
+      (assoc :id id)
+
+      params
+      (assoc :params params))))
+
+
+(defn make-request [config payload]
+
+  (let [{:rpc/keys [fn-before-send]}
+        config
+
+        request
+        (-> config
+            (assoc :form-params payload))]
+
+    (-> request
+        fn-before-send
+        client/request
+        ;; :body
+        ;; :result
+
+        )))
 
 
 (defn rpc-inner
@@ -69,36 +108,10 @@
 
   ([config method params]
 
-   (let [config
-         (rebase-config config method)
+   (let [payload
+         (make-payload config method params)]
 
-         {:rpc/keys [fn-id
-                     fn-before-send
-                     notify?]}
-         config
-
-         id
-         (when-not notify?
-           (generate-id fn-id))
-
-         payload
-         (cond-> {:version "2.0" ;; todo
-                  :method method}
-           id
-           (assoc :id id)
-
-           params
-           (assoc :params params))
-
-         request
-         (-> config
-             (assoc :form-params payload))]
-
-     (-> request
-         fn-before-send
-         client/request
-         :body
-         :result))))
+     (make-request config payload))))
 
 
 (defn call
@@ -133,6 +146,25 @@
   ([config method arg & args]
    (apply call (with-notify config method) method arg args)))
 
+
+;; TODO rebase config once!
+;; not json params but json body
+
+(defn batch [config batches]
+
+  (let [payload
+        (for [[method params] batches]
+          (make-payload config method params))]
+
+    (make-request config payload)))
+
+
+
+;; batch
+;; multi-client
+;; multi-resolve
+;; conn-manager
+;; as component
 
 
 
