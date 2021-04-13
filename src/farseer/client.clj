@@ -55,6 +55,13 @@
   (merge config-defaults config))
 
 
+
+(defn rebase-config [config method]
+  (let [method-options
+        (get-in config [:method-options method])]
+    (merge config method-options)))
+
+
 (defn rpc-inner
 
   ([config method]
@@ -62,15 +69,20 @@
 
   ([config method params]
 
-   (let [{:rpc/keys [fn-id
-                     fn-before-send]}
+   (let [config
+         (rebase-config config method)
+
+         {:rpc/keys [fn-id
+                     fn-before-send
+                     notify?]}
          config
 
          id
-         (generate-id fn-id)
+         (when-not notify?
+           (generate-id fn-id))
 
          payload
-         (cond-> {:version "2.0"
+         (cond-> {:version "2.0" ;; todo
                   :method method}
            id
            (assoc :id id)
@@ -103,6 +115,23 @@
    (rpc-inner config method (cons arg args))))
 
 
+(defn with-notify [config method]
+  (assoc-in
+   config
+   [:method-options method :rpc/notify?]
+   true))
+
+
+(defn notify
+
+  ([config method]
+   (call (with-notify config method) method))
+
+  ([config method params]
+   (call (with-notify config method) method params))
+
+  ([config method arg & args]
+   (apply call (with-notify config method) method arg args)))
 
 
 
@@ -126,25 +155,11 @@
 ;;      :auth ["fff" "ggg"]}}})
 
 
-;; (defn with-notify [config method]
-;;   (assoc-in
-;;    config
-;;    [:rpc/method-options method :rpc/notify?]
-;;    true))
 
 
 
-#_
-(defn notify
 
-  ([config method]
-   (call (with-notify config method) method))
 
-  ([config method params]
-   (call (with-notify config method) method params))
-
-  ([config method arg & args]
-   (apply call (with-notify config method) method arg args)))
 
 ;; (defn batch [client batches]
 

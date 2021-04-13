@@ -7,7 +7,11 @@
 
 
 (def config
-  {:handlers
+  {:method-options
+   {:some/method
+    {:rpc/notify? true}}
+
+   :handlers
 
    {:user/get-by-id
     {:name "Ivan"
@@ -33,5 +37,20 @@
           ;; resp (select-keys resp [:status :body])
           ]
 
-      (is (= {:name "Ivan", :email "test@test.com"}
+      (is (= {:name "Ivan" :email "test@test.com"}
              resp)))))
+
+
+(deftest test-client-notify
+
+  (stub/with-stub config
+
+    (let [cfg (client/make-config nil)
+
+          resp
+          (client/notify cfg :user/get-by-id 42)
+
+          ;; resp (select-keys resp [:status :body])
+          ]
+
+      (is (nil? resp)))))
