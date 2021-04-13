@@ -74,7 +74,7 @@
         (when-not notify?
           (generate-id fn-id))]
 
-    (cond-> {:version "2.0" ;; todo
+    (cond-> {:jsonrpc "2.0"
              :method method}
       id
       (assoc :id id)
@@ -95,9 +95,8 @@
     (-> request
         fn-before-send
         client/request
-        ;; :body
+        :body
         ;; :result
-
         )))
 
 

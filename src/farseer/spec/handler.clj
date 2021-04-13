@@ -12,7 +12,7 @@
   (s/or :int int? :string ::ne-string))
 
 
-(s/def ::version #{"2.0"})
+(s/def ::jsonrpc #{"2.0"})
 
 
 (s/def ::method
@@ -28,8 +28,8 @@
 
 
 (s/def ::rpc-single
-  (s/keys :req-un [::version
-                   ::method]
+  (s/keys :req-un [::method
+                   ::jsonrpc]
           :opt-un [::id
                    ::params]))
 

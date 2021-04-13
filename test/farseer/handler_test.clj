@@ -58,8 +58,8 @@
   (let [rpc {:id 1
              :method :math/sum
              :params [1 2]
-             :version "2.0"}
-        request {:params rpc}
+             :jsonrpc "2.0"}
+        request {:body rpc}
         handler (make-handler config)
 
         response (handler request)]
@@ -76,8 +76,8 @@
              :params {:name "Ivan"
                       :age 35
                       :email "test@testc.com"}
-             :version "2.0"}
-        request {:params rpc}
+             :jsonrpc "2.0"}
+        request {:body rpc}
         handler (make-handler config)
 
         response (handler request)]
@@ -105,8 +105,8 @@
              :params {:name "Ivan"
                       :age 35
                       :email "test@testc.com"}
-             :version "2.0"}
-        request {:params rpc}
+             :jsonrpc "2.0"}
+        request {:body rpc}
 
         config*
         (assoc-in config
@@ -133,8 +133,8 @@
 
   (let [rpc {:method "math/sum"
              :params [1 2]
-             :version "2.0"}
-        request {:params rpc}
+             :jsonrpc "2.0"}
+        request {:body rpc}
         handler (make-handler config)
 
         response (handler request)]
@@ -148,8 +148,8 @@
   (let [rpc {:id 1
              :method "math/sum"
              :params [1 nil]
-             :version "2.0"}
-        request {:params rpc}
+             :jsonrpc "2.0"}
+        request {:body rpc}
         handler (make-handler config)
 
         response (handler request)]
@@ -173,12 +173,12 @@
   (let [rpc [{:id 1
               :method "math/sum"
               :params [1 2]
-              :version "2.0"}
+              :jsonrpc "2.0"}
              {:id 2
               :method "math/sum"
               :params [3 4]
-              :version "2.0"}]
-        request {:params rpc}
+              :jsonrpc "2.0"}]
+        request {:body rpc}
         handler (make-handler config)
 
         response (handler request)]
@@ -195,17 +195,17 @@
   (let [rpc [{:id 1
               :method "math/sum"
               :params [1 2]
-              :version "2.0"}
+              :jsonrpc "2.0"}
              {:id 2
               :method "math/sum"
               :params [3 nil]
-              :version "2.0"}
+              :jsonrpc "2.0"}
              {:id 3
               :method "math/sum"
               :params [5 6]
-              :version "2.0"}]
+              :jsonrpc "2.0"}]
 
-        request {:params rpc}
+        request {:body rpc}
         handler (make-handler config)
 
         response (handler request)]
@@ -232,7 +232,7 @@
   (let [rpc {:id 1
              :method "custom/context"
              :params [1 2]
-             :version "2.0"}
+             :jsonrpc "2.0"}
 
         capture (atom nil)
 
@@ -243,7 +243,7 @@
                     {:foo 1}))
 
 
-        request {:params rpc}
+        request {:body rpc}
         handler (make-handler config {:this "foo"
                                       :that "bar"})
 
@@ -251,13 +251,15 @@
 
         [context & args] @capture]
 
-    (is (= {:this "foo"
-            :that "bar"
-            :request {:params
-                      {:id 1
-                       :method "custom/context"
-                       :params [1 2]
-                       :version "2.0"}}}
+    (is (=
+
+         {:this "foo"
+          :that "bar"
+          :request {:body
+                    {:id 1
+                     :method "custom/context"
+                     :params [1 2]
+                     :jsonrpc "2.0"}}}
 
            context))
 
@@ -277,7 +279,7 @@
 
   (let [rpc {:foo 42 :test "aa"}
 
-        request {:params rpc}
+        request {:body rpc}
         handler (make-handler config)
 
         response (handler request)]
@@ -293,7 +295,7 @@
              :message "Invalid Request"
              :data
              {:explain
-              "[:foo 42] - failed: map? in: [0] at: [:batch] spec: :farseer.spec.handler/rpc-single\n[:test \"aa\"] - failed: map? in: [1] at: [:batch] spec: :farseer.spec.handler/rpc-single\n{:foo 42, :test \"aa\"} - failed: (contains? % :version) at: [:single] spec: :farseer.spec.handler/rpc-single\n{:foo 42, :test \"aa\"} - failed: (contains? % :method) at: [:single] spec: :farseer.spec.handler/rpc-single\n",
+              "[:foo 42] - failed: map? in: [0] at: [:batch] spec: :farseer.spec.handler/rpc-single\n[:test \"aa\"] - failed: map? in: [1] at: [:batch] spec: :farseer.spec.handler/rpc-single\n{:foo 42, :test \"aa\"} - failed: (contains? % :jsonrpc) at: [:single] spec: :farseer.spec.handler/rpc-single\n{:foo 42, :test \"aa\"} - failed: (contains? % :method) at: [:single] spec: :farseer.spec.handler/rpc-single\n",
               :method nil}}}}
 
          response))))

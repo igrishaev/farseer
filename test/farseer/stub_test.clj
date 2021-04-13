@@ -34,7 +34,7 @@
          :coerce :always
          :form-params
          {:id 1
-          :version "2.0"
+          :jsonrpc "2.0"
           :method :user/get-by-id
           :params [100]}}]
 
@@ -65,7 +65,7 @@
          :coerce :always
          :form-params
          {:id 1
-          :version "2.0"
+          :jsonrpc "2.0"
           :method :dunno/not-found
           :params [100]}}]
 
@@ -98,7 +98,7 @@
          :coerce :always
          :form-params
          {:id 1
-          :version "2.0"
+          :jsonrpc "2.0"
           :method :some/failure
           :params [100]}}]
 
@@ -134,7 +134,7 @@
          :coerce :always
          :form-params
          {:id 1
-          :version "2.0"
+          :jsonrpc "2.0"
           :method :some/invalid-params
           :params [100]}}]
 
@@ -155,5 +155,35 @@
                {:code -32602
                 :message "Invalid params"
                 :data {:method "some/invalid-params"}}}}
+
+             response))))))
+
+
+(deftest test-stub-malformed-json
+
+  (let [params
+        {:method :post
+         :url "http://127.0.0.1:8008/api"
+         :throw-exceptions? false
+         :as :json
+         :coerce :always
+         :content-type :json
+         :body "not a JSON"}]
+
+    (stub/with-stub config
+
+      (let [response
+            (-> params
+                client/request
+                (select-keys [:status :body]))]
+
+        (is (=
+
+             {:status 400
+              :body
+              {:jsonrpc "2.0"
+               :error
+               {:code -32700
+                :message "Invalid JSON was received by the server."}}}
 
              response))))))

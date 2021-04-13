@@ -6,14 +6,8 @@
 
    [ring.adapter.jetty :refer [run-jetty]]
 
-   [ring.middleware.params
-    :refer [wrap-params]]
-
-   [ring.middleware.keyword-params
-    :refer [wrap-keyword-params]]
-
    [ring.middleware.json
-    :refer [wrap-json-params
+    :refer [wrap-json-body
             wrap-json-response]]))
 
 
@@ -68,12 +62,23 @@
          :body {:foo 42}}))))
 
 
+(def default-malformed-response
+  {:status  400
+   :headers {"Content-Type" "application/json"}
+   :body {:jsonrpc "2.0"
+          :error {:code -32700
+                  :message "Invalid JSON was received by the server."}}})
+
+
+(def json-body-opt
+  {:keywords? true
+   :malformed-response default-malformed-response})
+
+
 (defn wrap-app
   [app]
   (-> app
-      wrap-keyword-params
-      wrap-json-params
-      wrap-params
+      (wrap-json-body json-body-opt)
       wrap-json-response))
 
 

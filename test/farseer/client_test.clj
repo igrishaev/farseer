@@ -32,10 +32,7 @@
     (let [cfg (client/make-config nil)
 
           resp
-          (client/call cfg :user/get-by-id 42)
-
-          ;; resp (select-keys resp [:status :body])
-          ]
+          (client/call cfg :user/get-by-id 42)]
 
       (is (= {:name "Ivan" :email "test@test.com"}
              resp)))))
@@ -48,10 +45,7 @@
     (let [cfg (client/make-config nil)
 
           resp
-          (client/notify cfg :user/get-by-id 42)
-
-          ;; resp (select-keys resp [:status :body])
-          ]
+          (client/notify cfg :user/get-by-id 42)]
 
       (is (nil? resp)))))
 
@@ -65,12 +59,21 @@
 
           resp
           (client/batch cfg
-                        [[:user/get-by-id 1]
-                         [:user/get-by-id 2]
-                         [:user/get-by-id 3]])
+                        [[:user/get-by-id [1]]
+                         [:user/get-by-id [2]]
+                         [:user/get-by-id [3]]])]
 
-          ;; resp (select-keys resp [:status :body])
-          ]
+      (is (=
 
-      (is (= 1 resp)
+           [{:id 42
+             :jsonrpc "2.0"
+             :result {:name "Ivan" :email "test@test.com"}}
+            {:id 42
+             :jsonrpc "2.0"
+             :result {:name "Ivan" :email "test@test.com"}}
+            {:id 42
+             :jsonrpc "2.0"
+             :result {:name "Ivan" :email "test@test.com"}}]
+
+           resp)
        ))))

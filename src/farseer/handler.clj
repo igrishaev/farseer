@@ -15,7 +15,6 @@
 ;; auto-load func ns in config
 
 ;; better explain (expound?)
-;; rename version & opt-un
 
 ;; method overrides
 
@@ -132,7 +131,7 @@
         ;; TODO assert handler (symbol)
 
         arg-list
-        (if (vector? params)
+        (if (sequential? params)
           params [params])
 
         result
@@ -163,10 +162,10 @@
 
 (defn compose-response
   [{:as this :keys [rpc result]}]
-  (let [{:keys [id version]} rpc]
+  (let [{:keys [id jsonrpc]} rpc]
     (when id
       {:id id
-       :jsonrpc version
+       :jsonrpc jsonrpc
        :result result})))
 
 
@@ -179,7 +178,10 @@
 (defn rpc-error-handler
   [this e]
 
+  (clojure.inspector/inspect-tree this)
+
   (let [{:keys [rpc]} this
+
         {:keys [id method]} rpc
 
         err-data (ex-data e)
@@ -298,7 +300,7 @@
 
         batch?
         (when-not explain
-          (vector? rpc))]
+          (sequential? rpc))]
 
     (if explain
 
@@ -346,7 +348,7 @@
 
 
 (def config-default
-  {:data-field :params
+  {:data-field :body
    :validate-in-spec? true
    :validate-out-spec? true
    :allow-batch? true
@@ -382,6 +384,14 @@
              step-4-http-response
 
              (with-try [e]
+
+               (log/error e)
+
+               {:status 500
+                :body {:error {:foo 42}}}
+
+
+               #_
                (let [result (rpc-error-handler this e)
                      status (guess-http-status result)]
                  {:status status
