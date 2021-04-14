@@ -127,7 +127,7 @@
 
 
 (defn execute-method
-  [{:as this :keys [context config rpc handler-map]}]
+  [{:as this :keys [context rpc handler-map]}]
 
   (let [{:keys [params]} rpc
         {:keys [handler]} handler-map
@@ -181,8 +181,6 @@
 
 (defn rpc-error-handler
   [this e]
-
-  (clojure.inspector/inspect-tree this)
 
   (let [{:keys [rpc]} this
 
@@ -287,19 +285,14 @@
 (defn process-rpc-batch
   [this]
   (-> this
-      check-batch-limit
-      execute-batch))
+      (check-batch-limit)
+      (execute-batch)))
 
 
 (defn step-1-parse-payload
-  [{:as this :keys [config request]}]
+  [{:as this :keys [rpc]}]
 
-  (let [{:keys [data-field]} config
-
-        rpc
-        (get request data-field)
-
-        explain
+  (let [explain
         (explain-str ::handler/rpc rpc)
 
         batch?
@@ -329,26 +322,11 @@
 (defn step-3-process-rpc
   [{:as this :keys [batch?]}]
 
-  (let [result
-        (if batch?
-          (process-rpc-batch this)
-          (process-rpc-single this))]
-
-    (assoc this :result result)))
-
-
-(defn step-4-http-response
-  [{:as this :keys [batch? result]}]
-
   (if batch?
-
-    (let [result (remove nil? result)]
-      {:status 200
-       :body result})
-
-    (let [status (guess-http-status result)]
-      {:status status
-       :body result})))
+    (->> this
+         (process-rpc-batch)
+         (remove nil?))
+    (process-rpc-single this)))
 
 
 (def config-default
@@ -360,6 +338,88 @@
    :parallel-batch? true})
 
 
+(defn make-handler
+
+  ([config]
+   (make-handler config nil))
+
+  ([config globals]
+
+   (fn rpc-handler
+
+     ([rpc]
+      (rpc-handler rpc nil))
+
+     ([rpc locals]
+
+      (-> {:config (merge config-default config)
+           :context (merge globals locals)
+           :rpc rpc}
+
+          step-1-parse-payload
+          step-2-check-batch
+          step-3-process-rpc
+
+          (with-try [e]
+            (log/error e)
+            {:error {:foo 42}}))))))
+
+
+#_
+(defn make-http-handler
+  [config fn-context]
+
+  (let [context     {:db {:host "127.0.0.1"}}
+        rpc-handler (make-handler config context)]
+
+    (fn [{:as request :keys [body]}]
+
+      (let [user (authenticate request)
+            response (rpc-handler body {:user user})]
+
+        {:status 200
+         :body response}))))
+
+
+#_
+(defn make-http-app [config fn-req->context]
+
+  (let [handler (make-http-handler config)]
+
+    (fn [{:as request :keys [method uri]} foo]
+
+      (if (and (= :post method) (= "/api" uri))
+        (handler request (fn-context request))
+
+        {:not :found}))))
+
+
+#_
+(defn make-ws-handler
+  [config]
+
+  (fn [request]
+
+    (let [user (authenticate request)
+          ctx {:db :database :user user}
+          rpc-handler (make-handler config ctx)]
+
+      (http/websocket-connection req)
+
+      (rpc-handler)))
+
+  #_
+  (let [context     {:db {:host "127.0.0.1"}}
+        rpc-handler (make-handler config context)]
+
+    (fn [{:as request :keys [body]}]
+
+      (let [user (authenticate request)]
+
+        (rpc-handler body {:user user})))))
+
+
+#_
 (defn make-handler
 
   ([config]
