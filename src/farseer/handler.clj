@@ -365,20 +365,59 @@
             {:error {:foo 42}}))))))
 
 
+(defn wrap-rpc-auth
+  [rpc-handler]
+  (fn [rpc {:as locals :keys [user]}]
+    (if user
+      (rpc-handler rpc locals)
+      {:non-auth :request})))
+
+
+(defn authenticate [request]
+  {:id 1 :name "Ivan"})
+
+
+(defn make-http-app
+  [config]
+
+  (let [context {:db {:host "127.0.0.1"}}
+
+        handler (-> (make-handler config context)
+                    (wrap-rpc-auth))]
+
+    (fn [{:as request :keys [method uri body]}]
+
+      (if (and (= :post method) (= "/api" uri))
+
+        (let [user (authenticate request)]
+
+          {:status 200
+           :body (handler body {:user user})})
+
+        {:status 404 :body {:not :found}}))))
+
+
 #_
-(defn make-http-handler
-  [config fn-context]
+(defprotocol RPCHandler
 
-  (let [context     {:db {:host "127.0.0.1"}}
-        rpc-handler (make-handler config context)]
+  (spec-in [this]
+    )
 
-    (fn [{:as request :keys [body]}]
+  (spec-out [this]
+    )
 
-      (let [user (authenticate request)
-            response (rpc-handler body {:user user})]
+  (handle [this params]))
 
-        {:status 200
-         :body response}))))
+
+#_
+(defrecord GetUserByID
+    [db]
+
+  IRPCHandler
+
+  (handle [this [id]]
+    (jdbc/query db ["select * from users where id=?" id])))
+
 
 
 #_
