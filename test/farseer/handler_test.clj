@@ -235,9 +235,10 @@
 
         [context & args] @capture]
 
-    ;; test local context
-
-    (is (= {:this "foo" :that "bar"}
+    (is (= {:id 1
+            :method :custom/context
+            :this "foo"
+            :that "bar"}
            context))
 
     (is (= [1 2] args))

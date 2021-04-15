@@ -78,8 +78,11 @@
 (defn execute-method
   [{:as this :keys [context rpc handler-map]}]
 
-  (let [{:keys [params]} rpc
+  (let [{:keys [id method params]} rpc
         {:keys [handler]} handler-map
+
+        context
+        (assoc context :id id :method method)
 
         ;; TODO assert handler (symbol)
 
@@ -87,6 +90,7 @@
         (if (sequential? params)
           params [params])
 
+        ;; todo: drop apply maybe?
         result
         (apply handler context arg-list)]
 
