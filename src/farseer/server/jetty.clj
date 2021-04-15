@@ -28,3 +28,24 @@
 
      (run-jetty app {:port port
                      :join? join?}))))
+
+
+;; component?
+
+
+(defn component [config]
+
+  (with-meta {}
+
+    {'foo.bar/start
+     (fn [{:as this :keys [server]}]
+       ;;;
+       (let [context this
+             server (start-server config context)]
+         (assoc this :server server)))
+
+     'foo.bar/stop
+     (fn [{:as this :keys [server]}]
+       (when server
+         (.close server)
+         (dissoc this :server)))}))

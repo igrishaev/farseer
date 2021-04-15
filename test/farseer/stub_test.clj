@@ -9,14 +9,14 @@
 
 
 (def config
-  {:handlers
+  {:stub/methods
 
    {:user/get-by-id
     {:name "Ivan"
      :email "test@test.com"}
 
-    :some/invalid-params
-    (stub/->rpc-error :invalid-params)
+    ;; :some/invalid-params
+    ;; (stub/->rpc-error :invalid-params)
 
     :some/failure
     (fn [& _]
@@ -27,7 +27,7 @@
 
   (let [params
         {:method :post
-         :url "http://127.0.0.1:8008/api"
+         :url "http://127.0.0.1:8080"
          :throw-exceptions? false
          :as :json
          :content-type :json
@@ -87,6 +87,7 @@
              response))))))
 
 
+#_
 (deftest test-stub-failing
 
   (let [params
