@@ -1,13 +1,12 @@
 (ns farseer.handler
   (:require
+   [farseer.error :as e]
    [farseer.spec.handler :as handler]
 
    [clojure.tools.logging :as log]
 
    [clojure.spec.alpha :as s]))
 
-
-;; HTTP status always 200?
 
 ;; review sequential?
 
@@ -38,55 +37,6 @@
       out)))
 
 
-(def rpc-errors
-  {:parse-error
-   {:status 500
-    :code -32700
-    :message "Parse error"}
-
-   :invalid-request
-   {:status 400
-    :code -32600
-    :message "Invalid Request"}
-
-   :not-found
-   {:status 404
-    :code -32601
-    :message "Method not found"}
-
-   :invalid-params
-   {:status 400
-    :code -32602
-    :message "Invalid params"}
-
-   :internal-error
-   {:status 500
-    :code -32603
-    :message "Internal error"}})
-
-
-(def into-map (partial into {}))
-
-
-(def code->status
-  (into-map
-   (map (juxt :code :status)
-        (vals rpc-errors))))
-
-
-(defn rpc-error!
-  [{:as params :keys [type]}]
-
-  (let [rpc-error
-        (or (get rpc-errors type)
-            (get rpc-errors :internal-error))
-
-        data
-        (merge rpc-error params)]
-
-    (throw (ex-info "RPC error" data))))
-
-
 (defn find-method
   [{:as this :keys [config rpc]}]
 
@@ -96,7 +46,7 @@
         handler-map (get handlers method)]
 
     (if-not handler-map
-      (rpc-error! {:type :not-found})
+      (e/not-found! {:rpc/data {:method method}})
       (assoc this :handler-map handler-map))))
 
 
@@ -121,8 +71,7 @@
           (explain-str spec-in params))]
 
     (if explain
-      (rpc-error! {:type :invalid-params
-                   :data {:explain explain}})
+      (e/invalid-params! {:rpc/data {:explain explain}})
       this)))
 
 
@@ -159,8 +108,11 @@
           (explain-str spec-out result))]
 
     (if explain
-      ;; log?
-      (rpc-error! {:type :internal-error})
+
+      (do
+        (log/error explain)
+        (e/internal-error!))
+
       this)))
 
 
@@ -173,46 +125,18 @@
        :result result})))
 
 
-(def types-no-log
-  #{:invalid-request
-    :not-found
-    :invalid-params})
-
-
 (defn rpc-error-handler
-  [this e]
+  [{:as this :keys [rpc]} e]
 
-  (let [{:keys [rpc]} this
+  (let [response (e/->response e)
 
-        {:keys [id method]} rpc
+        {:keys [id method jsonrpc]}
+        rpc]
 
-        err-data (ex-data e)
-
-        {:keys [type]} err-data
-
-        rpc-error
-        (or
-         (get rpc-errors type)
-         (get rpc-errors :internal-error))
-
-        rpc-error
-        (merge rpc-error err-data)
-
-        {:keys [code message data]}
-        rpc-error
-
-        data
-        (assoc data :method method)]
-
-    (when-not (contains? types-no-log type)
-      ;; log method, id, etc
-      (log/error e))
-
-    {:id id
-     :jsonrpc "2.0"
-     :error {:code code
-             :message message
-             :data data}}))
+    (-> response
+        (assoc :id id)
+        (assoc :jsonrpc jsonrpc)
+        (assoc-in [:error :data :method] method))))
 
 
 (defn coerce-rpc
@@ -241,14 +165,6 @@
         (rpc-error-handler this e))))
 
 
-(defn guess-http-status
-  [{:keys [error]}]
-  (if error
-    (let [{:keys [code]} error]
-      (get code->status code 500))
-    200))
-
-
 (defn check-batch-limit
   [{:as this :keys [config rpc]}]
 
@@ -261,8 +177,8 @@
           (> batch-size max-batch-size))]
 
     (if exeeded?
-      (rpc-error! {:type :invalid-params
-                   :message "Batch size is too large"})
+      (e/invalid-params
+       {:rpc/message "Batch size is too large"})
       this)))
 
 
@@ -301,8 +217,8 @@
 
     (if explain
 
-      (rpc-error! {:type :invalid-request
-                   :data {:explain explain}})
+      (e/invalid-params
+       {:rpc/data {:explain explain}})
 
       (assoc this
              :rpc rpc
@@ -315,7 +231,10 @@
   (let [{:keys [allow-batch?]} config]
 
     (if (and batch? (not allow-batch?))
-      (rpc-error! {:type :invalid-request})
+
+      (e/invalid-params
+       {:rpc/message "Batch is not allowed"})
+
       this)))
 
 
@@ -323,15 +242,16 @@
   [{:as this :keys [batch?]}]
 
   (if batch?
+
     (->> this
          (process-rpc-batch)
          (remove nil?))
+
     (process-rpc-single this)))
 
 
 (def config-default
-  {:data-field :body
-   :validate-in-spec? true
+  {:validate-in-spec? true
    :validate-out-spec? true
    :allow-batch? true
    :max-batch-size 25
@@ -361,162 +281,4 @@
           step-3-process-rpc
 
           (with-try [e]
-            (log/error e)
-            {:error {:foo 42}}))))))
-
-
-(defn wrap-rpc-auth
-  [rpc-handler]
-  (fn [rpc {:as locals :keys [user]}]
-    (if user
-      (rpc-handler rpc locals)
-      {:non-auth :request})))
-
-
-(defn authenticate [request]
-  {:id 1 :name "Ivan"})
-
-
-(defn make-http-app
-  [config]
-
-  (let [context {:db {:host "127.0.0.1"}}
-
-        handler (-> (make-handler config context)
-                    (wrap-rpc-auth))]
-
-    (fn [{:as request :keys [method uri body]}]
-
-      (if (and (= :post method) (= "/api" uri))
-
-        (let [user (authenticate request)]
-
-          {:status 200
-           :body (handler body {:user user})})
-
-        {:status 404 :body {:not :found}}))))
-
-
-#_
-(defprotocol RPCHandler
-
-  (spec-in [this]
-    )
-
-  (spec-out [this]
-    )
-
-  (handle [this params]))
-
-
-#_
-(defrecord GetUserByID
-    [db]
-
-  IRPCHandler
-
-  (handle [this [id]]
-    (jdbc/query db ["select * from users where id=?" id])))
-
-
-
-#_
-(defn make-http-app [config fn-req->context]
-
-  (let [handler (make-http-handler config)]
-
-    (fn [{:as request :keys [method uri]} foo]
-
-      (if (and (= :post method) (= "/api" uri))
-        (handler request (fn-context request))
-
-        {:not :found}))))
-
-
-#_
-(defn make-ws-handler
-  [config]
-
-  (fn [request]
-
-    (let [user (authenticate request)
-          ctx {:db :database :user user}
-          rpc-handler (make-handler config ctx)]
-
-      (http/websocket-connection req)
-
-      (rpc-handler)))
-
-  #_
-  (let [context     {:db {:host "127.0.0.1"}}
-        rpc-handler (make-handler config context)]
-
-    (fn [{:as request :keys [body]}]
-
-      (let [user (authenticate request)]
-
-        (rpc-handler body {:user user})))))
-
-
-#_
-(defn make-handler
-
-  ([config]
-   (make-handler config nil))
-
-  ([config context]
-
-   (let [config
-         (merge config-default config)]
-
-     (fn [request]
-
-       (let [context
-             (assoc context :request request)
-
-             this
-             {:config config
-              :request request
-              :context context}]
-
-         (-> this
-
-             step-1-parse-payload
-             step-2-check-batch
-             step-3-process-rpc
-             step-4-http-response
-
-             (with-try [e]
-
-               (log/error e)
-
-               {:status 500
-                :body {:error {:foo 42}}}
-
-
-               #_
-               (let [result (rpc-error-handler this e)
-                     status (guess-http-status result)]
-                 {:status status
-                  :body result}))))))))
-
-
-;;;;;;;;;
-
-
-
-#_
-(defn ensure-fn [obj]
-  (cond
-
-    (fn? obj)
-    obj
-
-    (and (var? obj) (fn? @obj))
-    obj
-
-    (and (symbol? obj) (resolve obj))
-    (resolve obj)
-
-    :else
-    (throw (new Exception (format "Wrong function: %s" obj)))))
+            (e/->response e)))))))

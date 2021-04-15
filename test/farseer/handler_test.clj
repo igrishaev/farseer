@@ -59,13 +59,10 @@
              :method :math/sum
              :params [1 2]
              :jsonrpc "2.0"}
-        request {:body rpc}
         handler (make-handler config)
+        response (handler rpc)]
 
-        response (handler request)]
-
-    (is (= {:status 200
-            :body {:id 1 :jsonrpc "2.0" :result 3}}
+    (is (= {:id 1 :jsonrpc "2.0" :result 3}
            response))))
 
 
@@ -77,20 +74,16 @@
                       :age 35
                       :email "test@testc.com"}
              :jsonrpc "2.0"}
-        request {:body rpc}
         handler (make-handler config)
+        response (handler rpc)]
 
-        response (handler request)]
-
-    (is (= {:status 200
-            :body
-            {:id 1
-             :jsonrpc "2.0"
-             :result {:id 100
-                      :name "Ivan"
-                      :age 35
-                      :email "test@testc.com"}}}
-           response))))
+    (is (= {:id 1
+            :jsonrpc "2.0"
+            :result {:id 100
+                     :name "Ivan"
+                     :age 35
+                     :email "test@testc.com"}}
+               response))))
 
 
 (s/def :user/create.out-wrong
@@ -106,7 +99,6 @@
                       :age 35
                       :email "test@testc.com"}
              :jsonrpc "2.0"}
-        request {:body rpc}
 
         config*
         (assoc-in config
@@ -115,18 +107,17 @@
 
         handler (make-handler config*)
 
-        response (handler request)]
+        response (handler rpc)]
 
     (is (=
 
-         {:status 500
-          :body {:id 1
-                 :jsonrpc "2.0"
-                 :error {:code -32603
-                         :message "Internal error"
-                         :data {:method "user/create"}}}}
+         {:id 1
+          :jsonrpc "2.0"
+          :error {:code -32603
+                  :message "Internal error"
+                  :data {:method "user/create"}}}
 
-           response))))
+         response))))
 
 
 (deftest test-handler-notify-ok
@@ -134,13 +125,12 @@
   (let [rpc {:method "math/sum"
              :params [1 2]
              :jsonrpc "2.0"}
-        request {:body rpc}
+
         handler (make-handler config)
 
-        response (handler request)]
+        response (handler rpc)]
 
-    (is (= {:status 200 :body nil}
-           response))))
+    (is (nil? response))))
 
 
 (deftest test-handler-wrong-params
@@ -149,23 +139,21 @@
              :method "math/sum"
              :params [1 nil]
              :jsonrpc "2.0"}
-        request {:body rpc}
+
         handler (make-handler config)
 
-        response (handler request)]
+        response (handler rpc)]
 
-    (is (= {:status 400
-            :body
-            {:id 1
-             :jsonrpc "2.0"
-             :error {:code -32602
-                     :message "Invalid params"
-                     :data
-                     {:method "math/sum"
-                      :explain
-                      "nil - failed: number? in: [1] at: [1] spec: :math/sum.in\n"}}}}
+    (is (=
 
-           response))))
+         {:id 1
+          :jsonrpc "2.0"
+          :error {:code -32602
+                  :message "Invalid params"
+                  :data {:method "math/sum"
+                         :explain "nil - failed: number? in: [1] at: [1] spec: :math/sum.in\n"}}}
+
+         response))))
 
 
 (deftest test-handler-batch-ok
@@ -178,16 +166,17 @@
               :method "math/sum"
               :params [3 4]
               :jsonrpc "2.0"}]
-        request {:body rpc}
+
         handler (make-handler config)
 
-        response (handler request)]
+        response (handler rpc)]
 
-    (is (= {:status 200
-            :body
-            [{:id 1 :jsonrpc "2.0" :result 3}
-             {:id 2 :jsonrpc "2.0" :result 7}]}
-           response))))
+    (is (=
+
+         [{:id 1 :jsonrpc "2.0" :result 3}
+          {:id 2 :jsonrpc "2.0" :result 7}]
+
+         response))))
 
 
 (deftest test-handler-batch-one-fails
@@ -205,24 +194,21 @@
               :params [5 6]
               :jsonrpc "2.0"}]
 
-        request {:body rpc}
         handler (make-handler config)
 
-        response (handler request)]
+        response (handler rpc)]
 
     (is (=
 
-         {:status 200
-          :body
-          [{:id 1 :jsonrpc "2.0" :result 3}
-           {:id 2
-            :jsonrpc "2.0"
-            :error
-            {:code -32602
-             :message "Invalid params"
-             :data {:method "math/sum"
-                    :explain "nil - failed: number? in: [1] at: [1] spec: :math/sum.in\n"}}}
-           {:id 3 :jsonrpc "2.0" :result 11}]}
+         [{:id 1 :jsonrpc "2.0" :result 3}
+          {:id 2
+           :jsonrpc "2.0"
+           :error
+           {:code -32602
+            :message "Invalid params"
+            :data {:method "math/sum"
+                   :explain "nil - failed: number? in: [1] at: [1] spec: :math/sum.in\n"}}}
+          {:id 3 :jsonrpc "2.0" :result 11}]
 
          response))))
 
@@ -242,39 +228,33 @@
                     (reset! capture args)
                     {:foo 1}))
 
-
-        request {:body rpc}
         handler (make-handler config {:this "foo"
                                       :that "bar"})
 
-        response (handler request)
+        response (handler rpc)
 
         [context & args] @capture]
 
-    (is (=
+    ;; test local context
 
-         {:this "foo"
-          :that "bar"
-          :request {:body
-                    {:id 1
-                     :method "custom/context"
-                     :params [1 2]
-                     :jsonrpc "2.0"}}}
-
+    (is (= {:this "foo" :that "bar"}
            context))
 
     (is (= [1 2] args))
 
     (is (=
 
-         {:status 200
-          :body {:id 1
-                 :jsonrpc "2.0"
-                 :result {:foo 1}}}
+         {:id 1
+          :jsonrpc "2.0"
+          :result {:foo 1}}
 
          response))))
 
 
+;; todo: check for coll?
+
+
+#_
 (deftest test-handler-wrong-payload
 
   (let [rpc {:foo 42 :test "aa"}
@@ -287,16 +267,16 @@
     (is (=
 
          {:status 400,
-           :body
-           {:id nil
-            :jsonrpc "2.0"
-            :error
-            {:code -32600,
-             :message "Invalid Request"
-             :data
-             {:explain
-              "[:foo 42] - failed: map? in: [0] at: [:batch] spec: :farseer.spec.handler/rpc-single\n[:test \"aa\"] - failed: map? in: [1] at: [:batch] spec: :farseer.spec.handler/rpc-single\n{:foo 42, :test \"aa\"} - failed: (contains? % :jsonrpc) at: [:single] spec: :farseer.spec.handler/rpc-single\n{:foo 42, :test \"aa\"} - failed: (contains? % :method) at: [:single] spec: :farseer.spec.handler/rpc-single\n",
-              :method nil}}}}
+          :body
+          {:id nil
+           :jsonrpc "2.0"
+           :error
+           {:code -32600,
+            :message "Invalid Request"
+            :data
+            {:explain
+             "[:foo 42] - failed: map? in: [0] at: [:batch] spec: :farseer.spec.handler/rpc-single\n[:test \"aa\"] - failed: map? in: [1] at: [:batch] spec: :farseer.spec.handler/rpc-single\n{:foo 42, :test \"aa\"} - failed: (contains? % :jsonrpc) at: [:single] spec: :farseer.spec.handler/rpc-single\n{:foo 42, :test \"aa\"} - failed: (contains? % :method) at: [:single] spec: :farseer.spec.handler/rpc-single\n",
+             :method nil}}}}
 
          response))))
 
