@@ -273,23 +273,26 @@
 
   ([config context]
 
-   (s/assert ::spec.handler/config config)
+   (let [config
+         (config/add-defaults config defaults)]
 
-   (fn rpc-handler
+     (s/assert ::spec.handler/config config)
 
-     ([rpc]
-      (rpc-handler rpc nil))
+     (fn rpc-handler
 
-     ([rpc context-local]
+       ([rpc]
+        (rpc-handler rpc nil))
 
-      (-> {:config (config/add-defaults config defaults)
-           :context (merge context context-local)
-           :rpc rpc}
+       ([rpc context-local]
 
-          step-1-parse-payload
-          step-2-check-batch
-          step-3-process-rpc
+        (-> {:config config
+             :context (merge context context-local)
+             :rpc rpc}
 
-          (with-try [e]
-            (log/error e)
-            (e/->response e)))))))
+            step-1-parse-payload
+            step-2-check-batch
+            step-3-process-rpc
+
+            (with-try [e]
+              (log/error e)
+              (e/->response e))))))))

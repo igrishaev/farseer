@@ -2,8 +2,11 @@
   (:require
    [farseer.config :as config]
    [farseer.server.http :as http]
+   [farseer.spec.jetty :as spec.jetty]
 
-   [ring.adapter.jetty :refer [run-jetty]])
+   [ring.adapter.jetty :refer [run-jetty]]
+
+   [clojure.spec.alpha :as s])
 
   (:import
    org.eclipse.jetty.server.Server))
@@ -22,15 +25,17 @@
   ([config context]
 
    (let [config
-         (config/add-defaults config defaults)
+         (config/add-defaults config defaults)]
 
-         app
-         (http/make-app config context)
+     (s/assert ::spec.jetty/config config)
 
-         jetty-opt
-         (config/query-keys config "jetty")]
+     (let [app
+           (http/make-app config context)
 
-     (run-jetty app jetty-opt))))
+           jetty-opt
+           (config/query-keys config "jetty")]
+
+       (run-jetty app jetty-opt)))))
 
 
 (defn component [config]

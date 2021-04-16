@@ -2,11 +2,15 @@
   (:require
    [farseer.config :as config]
    [farseer.error :as e]
+
+   [farseer.spec.http :as spec.http]
    [farseer.handler :as handler]
 
    [ring.middleware.json
     :refer [wrap-json-body
-            wrap-json-response]]))
+            wrap-json-response]]
+
+   [clojure.spec.alpha :as s]))
 
 
 (def malformed-response
@@ -37,38 +41,41 @@
    (make-app config nil))
 
   ([config context]
+
    (let [config
-         (config/add-defaults config defaults)
+         (config/add-defaults config defaults)]
 
-         handler
-         (handler/make-handler config context)
+     (s/assert ::spec.http/config config)
 
-         {:http/keys [method path health?]}
-         config]
+     (let [handler
+           (handler/make-handler config context)
 
-     (->
+           {:http/keys [method path health?]}
+           config]
 
-      (fn [{:as request
-            :keys [uri
-                   body
-                   request-method]}]
+       (->
 
-        (cond
+        (fn [{:as request
+              :keys [uri
+                     body
+                     request-method]}]
 
-          (and (= method request-method)
-               (= path uri))
-          (let [response
-                (handler body {:request request})]
-            {:status 200
-             :body response})
+          (cond
 
-          (and health?
-               (or (= "/health" uri)
-                   (= "/healthz" uri)))
-          {:status 200}
+            (and (= method request-method)
+                 (= path uri))
+            (let [response
+                  (handler body {:request request})]
+              {:status 200
+               :body response})
 
-          :else
-          {:status 404}))
+            (and health?
+                 (or (= "/health" uri)
+                     (= "/healthz" uri)))
+            {:status 200}
 
-      (wrap-json-body json-body-options)
-      (wrap-json-response)))))
+            :else
+            {:status 404}))
+
+        (wrap-json-body json-body-options)
+        (wrap-json-response))))))
