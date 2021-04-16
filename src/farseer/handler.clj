@@ -132,8 +132,6 @@
 (defn rpc-error-handler
   [{:as this :keys [rpc]} e]
 
-  (clojure.inspector/inspect-tree e)
-
   (let [response (e/->response e)
 
         {:keys [id method jsonrpc]}
@@ -287,6 +285,5 @@
           step-3-process-rpc
 
           (with-try [e]
-            (clojure.inspector/inspect-tree e)
             (log/error e)
             (e/->response e)))))))

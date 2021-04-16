@@ -2,7 +2,10 @@
   (:require
    [farseer.server.http :as http]
 
-   [ring.adapter.jetty :refer [run-jetty]]))
+   [ring.adapter.jetty :refer [run-jetty]])
+
+  (:import
+   org.eclipse.jetty.server.Server))
 
 
 (def config-default
@@ -10,7 +13,18 @@
    :jetty/join? false})
 
 
-(defn start-server
+(defn get-keys [config ns]
+  (persistent!
+   (reduce-kv
+    (fn [result k v]
+      (if (= (namespace k) (name ns))
+        (assoc! result (keyword (name k)) v)
+        result))
+    (transient {})
+    config)))
+
+
+(defn ^Server start-server
 
   ([config]
    (start-server config nil))
@@ -23,11 +37,10 @@
          app
          (http/make-app config context)
 
-         {:jetty/keys [port join?]}
-         config]
+         jetty-opt
+         (get-keys config "jetty")]
 
-     (run-jetty app {:port port
-                     :join? join?}))))
+     (run-jetty app jetty-opt))))
 
 
 ;; component?
@@ -37,15 +50,15 @@
 
   (with-meta {}
 
-    {'foo.bar/start
+    {'com.stuartsierra.component/start
      (fn [{:as this :keys [server]}]
-       ;;;
-       (let [context this
-             server (start-server config context)]
-         (assoc this :server server)))
+       (if server
+         this
+         (let [server (start-server config this)]
+           (assoc this :server server))))
 
-     'foo.bar/stop
+     'com.stuartsierra.component/stop
      (fn [{:as this :keys [server]}]
        (when server
-         (.close server)
+         (.stop ^Server server)
          (dissoc this :server)))}))
