@@ -67,6 +67,22 @@
            response))))
 
 
+(deftest test-handler-wrong-config
+
+  (let [rpc {:id 1
+             :method :math/sum
+             :params [1 2]
+             :jsonrpc "2.0"}
+
+        config*
+        (assoc config :rpc/spec-validate-in? "test")]
+
+    (is (thrown-with-msg?
+         clojure.lang.ExceptionInfo
+         #"Spec assertion failed"
+         (make-handler config*)))))
+
+
 (deftest test-handler-map-params
 
   (let [rpc {:id 1
@@ -84,7 +100,7 @@
                      :name "Ivan"
                      :age 35
                      :email "test@testc.com"}}
-               response))))
+           response))))
 
 
 (s/def :user/create.out-wrong

@@ -2,7 +2,9 @@
   (:require
    [farseer.config :as config]
    [farseer.error :as e]
-   [farseer.spec.handler :as handler]
+
+   [farseer.spec.handler :as spec.handler]
+   [farseer.spec.rpc :as spec.rpc]
 
    [clojure.tools.logging :as log]
 
@@ -215,7 +217,7 @@
   [{:as this :keys [rpc]}]
 
   (let [explain
-        (explain-str ::handler/rpc rpc)
+        (explain-str ::spec.rpc/rpc rpc)
 
         batch?
         (when-not explain
@@ -257,17 +259,7 @@
 
 
 (def defaults
-  {
-   ;; :rpc/handlers
-   ;; {:user/get-by-id
-   ;;  {:handler/spec-in ::foo
-   ;;   :handler/spec-out ::foo
-   ;;   :handler/title "sdfsdf"
-   ;;   :handler/description "sdfsdf"
-   ;;   :handler/function 1}}
-
-
-   :rpc/spec-validate-in? true
+  {:rpc/spec-validate-in? true
    :rpc/spec-validate-out? true
    :rpc/batch-allowed? true
    :rpc/batch-max-size 25
@@ -280,6 +272,8 @@
    (make-handler config nil))
 
   ([config context]
+
+   (s/assert ::spec.handler/config config)
 
    (fn rpc-handler
 

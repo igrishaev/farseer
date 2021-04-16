@@ -72,7 +72,10 @@
 
    :dev
    {:global-vars {*assert* true
-                  *warn-on-reflection* true}}
+                  *warn-on-reflection* true}
+    :jvm-opts ["-Dclojure.spec.compile-asserts=true"
+               "-Dclojure.spec.check-asserts=true"]}
+
    :uberjar
    {:aot :all
     :jvm-opts ["-Dclojure.compiler.direct-linking=true"]}})
