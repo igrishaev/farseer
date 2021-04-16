@@ -38,6 +38,10 @@
        (run-jetty app jetty-opt)))))
 
 
+(defn stop-server [^Server server]
+  (.stop server))
+
+
 (defn component [config]
 
   (with-meta {}
@@ -52,5 +56,5 @@
      'com.stuartsierra.component/stop
      (fn [{:as this :keys [server]}]
        (when server
-         (.stop ^Server server)
+         (stop-server server)
          (dissoc this :server)))}))
