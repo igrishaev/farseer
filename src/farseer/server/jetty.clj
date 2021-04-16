@@ -1,5 +1,6 @@
 (ns farseer.server.jetty
   (:require
+   [farseer.config :as config]
    [farseer.server.http :as http]
 
    [ring.adapter.jetty :refer [run-jetty]])
@@ -8,20 +9,9 @@
    org.eclipse.jetty.server.Server))
 
 
-(def config-default
+(def defaults
   {:jetty/port 8080
    :jetty/join? false})
-
-
-(defn get-keys [config ns]
-  (persistent!
-   (reduce-kv
-    (fn [result k v]
-      (if (= (namespace k) (name ns))
-        (assoc! result (keyword (name k)) v)
-        result))
-    (transient {})
-    config)))
 
 
 (defn ^Server start-server
@@ -32,18 +22,15 @@
   ([config context]
 
    (let [config
-         (merge config-default config)
+         (config/add-defaults config defaults)
 
          app
          (http/make-app config context)
 
          jetty-opt
-         (get-keys config "jetty")]
+         (config/query-keys config "jetty")]
 
      (run-jetty app jetty-opt))))
-
-
-;; component?
 
 
 (defn component [config]

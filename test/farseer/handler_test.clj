@@ -41,16 +41,17 @@
 
 
 (def config
-  {:handlers
+  {:rpc/handlers
+
    {:math/sum
-    {:handler #'rpc-sum
-     :spec-in :math/sum.in
-     :spec-out :math/sum.out}
+    {:handler/function #'rpc-sum
+     :handler/spec-in :math/sum.in
+     :handler/spec-out :math/sum.out}
 
     :user/create
-    {:handler user-create
-     :spec-in :user/create.in
-     :spec-out :user/create.out}}})
+    {:handler/function user-create
+     :handler/spec-in :user/create.in
+     :handler/spec-out :user/create.out}}})
 
 
 (deftest test-handler-ok
@@ -102,7 +103,7 @@
 
         config*
         (assoc-in config
-                  [:handlers :user/create :spec-out]
+                  [:rpc/handlers :user/create :handler/spec-out]
                   :user/create.out-wrong)
 
         handler (make-handler config*)
@@ -223,7 +224,8 @@
         capture (atom nil)
 
         config
-        (assoc-in config [:handlers :custom/context :handler]
+        (assoc-in config
+                  [:rpc/handlers :custom/context :handler/function]
                   (fn [& args]
                     (reset! capture args)
                     {:foo 1}))

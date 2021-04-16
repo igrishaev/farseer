@@ -1,5 +1,6 @@
 (ns farseer.server.http
   (:require
+   [farseer.config :as config]
    [farseer.error :as e]
    [farseer.handler :as handler]
 
@@ -24,7 +25,7 @@
    :malformed-response malformed-response})
 
 
-(def config-default
+(def defaults
   {:http/method :post
    :http/path "/"
    :http/health? true})
@@ -37,7 +38,7 @@
 
   ([config context]
    (let [config
-         (merge config-default config)
+         (config/add-defaults config defaults)
 
          handler
          (handler/make-handler config context)

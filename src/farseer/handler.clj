@@ -1,5 +1,6 @@
 (ns farseer.handler
   (:require
+   [farseer.config :as config]
    [farseer.error :as e]
    [farseer.spec.handler :as handler]
 
@@ -41,30 +42,30 @@
   [{:as this :keys [config rpc]}]
 
   (let [{:keys [method]} rpc
-        {:keys [handlers]} config
+        {:keys [rpc/handlers]} config
 
-        handler-map (get handlers method)]
+        handler (get handlers method)]
 
-    (if-not handler-map
+    (if-not handler
       (e/not-found! {:rpc/data {:method method}})
-      (assoc this :handler-map handler-map))))
+      (assoc this :handler handler))))
 
 
 (defn validate-params
-  [{:as this :keys [config rpc handler-map]}]
+  [{:as this :keys [config rpc handler]}]
 
   (let [{:keys [params]}
         rpc
 
-        {:keys [validate-in-spec?]}
+        {:rpc/keys [spec-validate-in?]}
         config
 
-        {:keys [spec-in
-                spec-out
-                handler]} handler-map
+        {:handler/keys [spec-in
+                        spec-out
+                        function]} handler
 
         validate?
-        (and validate-in-spec? spec-in)
+        (and spec-validate-in? spec-in)
 
         explain
         (when validate?
@@ -76,10 +77,10 @@
 
 
 (defn execute-method
-  [{:as this :keys [context rpc handler-map]}]
+  [{:as this :keys [context rpc handler]}]
 
   (let [{:keys [id method params]} rpc
-        {:keys [handler]} handler-map
+        {:handler/keys [function]} handler
 
         context
         (assoc context :id id :method method)
@@ -92,20 +93,21 @@
 
         ;; todo: drop apply maybe?
         result
-        (apply handler context arg-list)]
+        (apply function context arg-list)]
 
     (assoc this :result result)))
 
 
 (defn validate-output
-  [{:as this :keys [config result handler-map]}]
+  [{:as this :keys [config result handler]}]
 
-  (let [{:keys [spec-out]} handler-map
+  (let [{:handler/keys [spec-out]} handler
 
-        {:keys [validate-out-spec?]} config
+        {:rpc/keys [spec-validate-out?]}
+        config
 
         validate?
-        (and validate-out-spec? spec-out)
+        (and spec-validate-out? spec-out)
 
         explain
         (when validate?
@@ -172,13 +174,13 @@
 (defn check-batch-limit
   [{:as this :keys [config rpc]}]
 
-  (let [{:keys [max-batch-size]} config
+  (let [{:rpc/keys [batch-max-size]} config
 
         batch-size (count rpc)
 
         exeeded?
-        (when max-batch-size
-          (> batch-size max-batch-size))]
+        (when batch-max-size
+          (> batch-size batch-max-size))]
 
     (if exeeded?
       (e/invalid-params
@@ -189,10 +191,10 @@
 (defn execute-batch
   [{:as this :keys [config rpc]}]
 
-  (let [{:keys [parallel-batch?]} config
+  (let [{:rpc/keys [batch-parallel?]} config
 
         fn-map
-        (if parallel-batch? pmap map)
+        (if batch-parallel? pmap map)
 
         fn-single
         (fn [rpc-single]
@@ -232,9 +234,9 @@
 (defn step-2-check-batch
   [{:as this :keys [config batch?]}]
 
-  (let [{:keys [allow-batch?]} config]
+  (let [{:rpc/keys [batch-allowed?]} config]
 
-    (if (and batch? (not allow-batch?))
+    (if (and batch? (not batch-allowed?))
 
       (e/invalid-params
        {:rpc/message "Batch is not allowed"})
@@ -254,12 +256,22 @@
     (process-rpc-single this)))
 
 
-(def config-default
-  {:validate-in-spec? true
-   :validate-out-spec? true
-   :allow-batch? true
-   :max-batch-size 25
-   :parallel-batch? true})
+(def defaults
+  {
+   ;; :rpc/handlers
+   ;; {:user/get-by-id
+   ;;  {:handler/spec-in ::foo
+   ;;   :handler/spec-out ::foo
+   ;;   :handler/title "sdfsdf"
+   ;;   :handler/description "sdfsdf"
+   ;;   :handler/function 1}}
+
+
+   :rpc/spec-validate-in? true
+   :rpc/spec-validate-out? true
+   :rpc/batch-allowed? true
+   :rpc/batch-max-size 25
+   :rpc/batch-parallel? true})
 
 
 (defn make-handler
@@ -267,17 +279,17 @@
   ([config]
    (make-handler config nil))
 
-  ([config globals]
+  ([config context]
 
    (fn rpc-handler
 
      ([rpc]
       (rpc-handler rpc nil))
 
-     ([rpc locals]
+     ([rpc context-local]
 
-      (-> {:config (merge config-default config)
-           :context (merge globals locals)
+      (-> {:config (config/add-defaults config defaults)
+           :context (merge context context-local)
            :rpc rpc}
 
           step-1-parse-payload
