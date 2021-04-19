@@ -52,15 +52,15 @@
    (with-meta {}
 
      {'com.stuartsierra.component/start
-      (fn [{:as this :keys [server]}]
+      (fn [{:as this :jetty/keys [server]}]
         (if server
           this
           (let [context (merge context this)
                 server (start-server config context)]
-            (assoc this :server server))))
+            (assoc this :jetty/server server))))
 
       'com.stuartsierra.component/stop
-      (fn [{:as this :keys [server]}]
+      (fn [{:as this :jetty/keys [server]}]
         (when server
           (stop-server server)
-          (dissoc this :server)))})))
+          (dissoc this :jetty/server)))})))
