@@ -135,3 +135,50 @@
 
       (is (component? comp-stopped))
       (is (nil? (:http/connection-manager comp-stopped))))))
+
+
+(deftest test-wrong-config
+
+  (is (thrown-with-msg?
+       clojure.lang.ExceptionInfo
+       #"Spec assertion failed"
+
+       (client/make-client {}))))
+
+
+(def wrong-payload-cases
+  [[:user/get-by-id 123]
+   [:user/get-by-id "test"]])
+
+
+(deftest test-wrong-payload
+
+  (let [client (client/make-client config-client)]
+
+    (doseq [[method params] wrong-payload-cases]
+
+      (is (thrown-with-msg?
+           clojure.lang.ExceptionInfo
+           #"Spec assertion failed"
+
+           (client/call client method params))))))
+
+
+(def valid-payload-cases
+  [[:user/get-by-id nil]
+   [:user/get-by-id [1 2 3]]
+   [:user/get-by-id {:id 1}]
+   [:user/get-by-id {}]])
+
+
+(deftest test-valid-payload
+
+  (let [client (client/make-client config-client)]
+
+    (doseq [[method params] valid-payload-cases]
+
+      (let [result
+            (client/call client method params)]
+
+        (is (= {:jsonrpc "2.0" :result {:name "Ivan"}}
+               (drop-id result)))))))
