@@ -20,8 +20,14 @@
 
 (def config-server
   {:jetty/port PORT
+
    :rpc/handlers
-   {:user/get-by-id
+   {:userGetById
+    {:handler/function
+     (fn [& _]
+       {:name "Ivan"})}
+
+    :user/get-by-id
     {:handler/function
      (fn [& _]
        {:name "Ivan"})}}})
@@ -168,7 +174,8 @@
   [[:user/get-by-id nil]
    [:user/get-by-id [1 2 3]]
    [:user/get-by-id {:id 1}]
-   [:user/get-by-id {}]])
+   [:user/get-by-id {}]
+   [:userGetById {}]])
 
 
 (deftest test-valid-payload

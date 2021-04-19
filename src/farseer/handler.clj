@@ -294,5 +294,6 @@
             step-3-process-rpc
 
             (with-try [e]
+              ;; todo no log
               (log/error e)
               (e/->response e))))))))

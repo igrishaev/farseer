@@ -10,7 +10,7 @@
 (s/def :rpc/batch-max-size     nat-int?)
 (s/def :rpc/batch-parallel?    boolean?)
 
-(s/def :rpc/method qualified-keyword?)
+(s/def :rpc/method keyword?)
 
 (s/def :rpc/handlers
   (s/map-of :rpc/method :rpc/handler))
