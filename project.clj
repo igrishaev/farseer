@@ -28,6 +28,7 @@
    [ring/ring-jetty-adapter]
    [ring/ring-json]
    [ch.qos.logback/logback-classic]
+   [com.stuartsierra/component]
 
    ]
 
@@ -45,7 +46,9 @@
    [ring/ring-jetty-adapter "1.7.1"]
    [ring/ring-json "0.5.0"]
 
-   [ch.qos.logback/logback-classic "1.2.3"]]
+   [ch.qos.logback/logback-classic "1.2.3"]
+
+   [com.stuartsierra/component "1.0.0"]]
 
   :release-tasks
   [["vcs" "assert-committed"]

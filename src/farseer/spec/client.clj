@@ -3,13 +3,9 @@
    [clojure.spec.alpha :as s]))
 
 
-(defn ident? [kw]
-  (partial identical? kw))
-
-
 (s/def :rpc/fn-id
-  (s/or :id/int  (ident? :id/int)
-        :id/uuid (ident? :id/uuid)
+  (s/or :id/int  #{:id/int}
+        :id/uuid #{:id/uuid}
         :id/fn   fn?))
 
 

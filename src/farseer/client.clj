@@ -52,7 +52,7 @@
        (s/assert ::spec.client/config)))
 
 
-(defn add-conn-mgr [config]
+(defn start-conn-mgr [config]
   (let [conn-mgr-opt
         (config/query-keys config "conn-mgr")
 
@@ -71,13 +71,22 @@
   (assoc config :http/connection-manager nil))
 
 
+(defmacro with-conn-mgr
+  [[bind config] & body]
+  `(let [~bind (start-conn-mgr ~config)]
+     (try
+       ~@body
+       (finally
+         (stop-conn-mgr ~bind)))))
+
+
 (defn component [config]
 
   (with-meta (make-client config)
 
     {'com.stuartsierra.component/start
      (fn [this]
-       (add-conn-mgr this))
+       (start-conn-mgr this))
 
      'com.stuartsierra.component/stop
      (fn [this]
@@ -111,14 +120,14 @@
 
   ([config method params options]
 
-   (let [{:rpc/keys [notify?]}
+   (let [{:rpc/keys [notify]}
          options
 
          {:rpc/keys [fn-id]}
          config
 
          id
-         (when-not notify?
+         (when-not notify
            (generate-id fn-id))]
 
      (cond-> {:jsonrpc "2.0"
@@ -150,7 +159,7 @@
   ([config method params]
    (let [payload
          (make-payload config method params
-                       {:rpc/notify? true})]
+                       {:rpc/notify true})]
      (make-request config payload))))
 
 
@@ -158,9 +167,9 @@
   (reduce
    (fn [result batch]
      (let [[method params] batch
-           notify? (some-> batch meta :rpc/notify?)
+           notify (some-> batch meta :rpc/notify)
            payload (make-payload config method params
-                                 {:rpc/notify? notify?})]
+                                 {:rpc/notify notify})]
        (conj result payload)))
    []
    batches))
