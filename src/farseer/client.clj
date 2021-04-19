@@ -102,6 +102,7 @@
   (let [{:rpc/keys [fn-before-send]}
         config
 
+        ;; TODO: prepare http/client keys
         request
         (-> config
             (config/query-keys "http")
