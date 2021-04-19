@@ -24,7 +24,9 @@
 
 
 (s/def ::params
-  (s/or :map ::params-map :seq sequential?))
+  (s/or :map ::params-map
+        :seq sequential?
+        :nil nil?))
 
 
 (s/def ::rpc-single

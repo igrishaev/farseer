@@ -1,56 +1,54 @@
 (ns farseer.client-test
   (:require
    [farseer.client :as client]
-   [farseer.stub :as stub]
+   [farseer.server.jetty :as jetty]
 
-   [clojure.test :refer [deftest is]]))
+   [clojure.test :refer [deftest is use-fixtures]]))
 
 
-(def config
-  {:method-options
-   {:some/method
-    {:rpc/notify? true}}
+(def PORT 8808)
 
-   :handlers
 
+(def config-client
+  {:http/url (format "http://127.0.0.1:%s" PORT)})
+
+
+(def config-server
+  {:jetty/port PORT
+   :rpc/handlers
    {:user/get-by-id
-    {:name "Ivan"
-     :email "test@test.com"}
+    {:handler/function
+     (fn [& _]
+       {:name "Ivan"})}}})
 
-    :some/invalid-params
-    (stub/->rpc-error :invalid-params)
 
-    :some/failure
-    (fn [& _]
-      (/ 0 0))}})
+(defn jetty-fixture [t]
+  (let [server (jetty/start-server config-server)]
+    (t)
+    (jetty/stop-server server)))
+
+
+(use-fixtures :once jetty-fixture)
 
 
 (deftest test-client-ok
 
-  (stub/with-stub config
+  (let [client (client/make-client config-client)
+        result (client/call client :user/get-by-id [1])]
 
-    (let [cfg (client/make-config nil)
-
-          resp
-          (client/call cfg :user/get-by-id 42)]
-
-      (is (= {:name "Ivan" :email "test@test.com"}
-             resp)))))
-
-
-(deftest test-client-notify-ok
-
-  (stub/with-stub config
-
-    (let [cfg (client/make-config nil)
-
-          resp
-          (client/notify cfg :user/get-by-id 42)]
-
-      (is (nil? resp)))))
+    (is (= 1 result))
 
 
 
+
+
+    )
+
+)
+
+
+
+#_
 (deftest test-client-batch-ok
 
   (stub/with-stub config
@@ -76,4 +74,4 @@
              :result {:name "Ivan" :email "test@test.com"}}]
 
            resp)
-       ))))
+          ))))

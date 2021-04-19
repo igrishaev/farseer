@@ -1,20 +1,22 @@
 (ns farseer.client
   (:require
-   [clj-http.client :as client]
+   [farseer.config :as config]
+   [farseer.spec.rpc :as spec.rpc]
+   [farseer.spec.client :as spec.client]
 
-   ;; [clojure.string :as str]
-   ;; [clojure.spec.alpha :as s]
-   ))
+   [clj-http.client :as client]
+   [clj-http.conn-mgr :as conn-mgr]
+
+   [clojure.tools.logging :as log]
+   [clojure.spec.alpha :as s]))
 
 
 (defn generate-id [fn-id]
-  42
-  #_
   (cond
-    (= fn-id :int)
+    (= fn-id :id/int)
     (rand-int 99999)
 
-    (= fn-id :uuid)
+    (= fn-id :id/uuid)
     (str (java.util.UUID/randomUUID))
 
     (fn? fn-id)
@@ -25,186 +27,145 @@
 
 
 
-(def config-defaults
-  {
-   :rpc/fn-before-send identity
-   :rpc/fn-id          :int
+(def defaults
+  {:rpc/fn-before-send identity
+   :rpc/fn-id          :id/int
 
-   ;; :rpc/multi? false
-   ;; :rpc/fn-dispatch-service get-ns
-   ;; :rpc/notify? false
+   :http/method             :post
+   :http/headers            {:user-agent "farseer.client"}
+   :http/socket-timeout     5000
+   :http/connection-timeout 5000
+   :http/as                 :json
+   :http/content-type       :json
+   :http/throw-exceptions?  false
+   :http/coerce             :always
+   :http/connection-manager nil
 
-   :method             :post
-   :url                "http://127.0.0.1:8008/api"
-   :headers            {:user-agent "jsonrpc.client"}
-   :socket-timeout     5000
-   :connection-timeout 5000
-   :throw-exceptions?  false
-   :as                 :json
-   :content-type       :json
-   :coerce             :always
-
-   ;; conn manager
+   :conn-mgr/timeout           5
+   :conn-mgr/threads           4
+   :conn-mgr/default-per-route 2
+   :conn-mgr/insecure?         false})
 
 
-   })
+(defn make-client [config]
+  (->> (config/add-defaults config defaults)
+       (s/assert ::spec.client/config)))
 
 
-(defn make-config [config]
-  ;; todo deep merge
-  (merge config-defaults config))
+(defn add-conn-mgr [config]
+  (let [conn-mgr-opt
+        (config/query-keys config "conn-mgr")
+
+        conn-mgr
+        (conn-mgr/make-reusable-conn-manager conn-mgr-opt)]
+
+    (assoc config :http/connection-manager conn-mgr)))
 
 
-(defn rebase-config [config method]
-  (let [method-options
-        (get-in config [:method-options method])]
-    (merge config method-options)))
+(defn stop-conn-mgr
+  [{:as config :http/keys [connection-manager]}]
+
+  (when connection-manager
+    (conn-mgr/shutdown-manager connection-manager))
+
+  (assoc config :http/connection-manager nil))
 
 
-(defn make-payload [config method params]
-  (let [config
-        (rebase-config config method)
+(defn component [config]
 
-        {:rpc/keys [fn-id
-                    fn-before-send
-                    notify?]}
-        config
+  (with-meta (make-client config)
 
-        id
-        (when-not notify?
-          (generate-id fn-id))]
+    {'com.stuartsierra.component/start
+     (fn [this]
+       (add-conn-mgr this))
 
-    (cond-> {:jsonrpc "2.0"
-             :method method}
-      id
-      (assoc :id id)
-
-      params
-      (assoc :params params))))
+     'com.stuartsierra.component/stop
+     (fn [this]
+       (stop-conn-mgr this))}))
 
 
 (defn make-request [config payload]
+
+  (s/assert ::spec.rpc/rpc payload)
+
+  (log/debugf "RPC call: %s" payload)
 
   (let [{:rpc/keys [fn-before-send]}
         config
 
         request
         (-> config
+            (config/query-keys "http")
             (assoc :form-params payload))]
 
     (-> request
         fn-before-send
         client/request
-        :body
-        ;; :result
-        )))
+        :body)))
 
 
-(defn rpc-inner
-
-  ([config method]
-   (rpc-inner config method nil))
+(defn make-payload
 
   ([config method params]
+   (make-payload config method params nil))
 
-   (let [payload
-         (make-payload config method params)]
+  ([config method params options]
 
-     (make-request config payload))))
+   (let [{:rpc/keys [notify?]}
+         options
+
+         {:rpc/keys [fn-id]}
+         config
+
+         id
+         (when-not notify?
+           (generate-id fn-id))]
+
+     (cond-> {:jsonrpc "2.0"
+              :method method}
+
+       id
+       (assoc :id id)
+
+       params
+       (assoc :params params)))))
 
 
 (defn call
 
   ([config method]
-   (rpc-inner config method))
+   (call config method nil))
 
   ([config method params]
-   (if (map? params)
-     (rpc-inner config method params)
-     (rpc-inner config method [params])))
-
-  ([config method arg & args]
-   (rpc-inner config method (cons arg args))))
-
-
-(defn with-notify [config method]
-  (assoc-in
-   config
-   [:method-options method :rpc/notify?]
-   true))
+   (let [payload
+         (make-payload config method params)]
+     (make-request config payload))))
 
 
 (defn notify
 
   ([config method]
-   (call (with-notify config method) method))
+   (notify config method nil))
 
   ([config method params]
-   (call (with-notify config method) method params))
+   (let [payload
+         (make-payload config method params
+                       {:rpc/notify? true})]
+     (make-request config payload))))
 
-  ([config method arg & args]
-   (apply call (with-notify config method) method arg args)))
 
+(defn batches->payload [config batches]
+  (reduce
+   (fn [result batch]
+     (let [[method params] batch
+           notify? (some-> batch meta :rpc/notify?)
+           payload (make-payload config method params
+                                 {:rpc/notify? notify?})]
+       (conj result payload)))
+   []
+   batches))
 
-;; TODO rebase config once!
-;; not json params but json body
 
 (defn batch [config batches]
-
-  (let [payload
-        (for [[method params] batches]
-          (make-payload config method params))]
-
+  (let [payload (batches->payload config batches)]
     (make-request config payload)))
-
-
-
-;; batch
-;; multi-client
-;; multi-resolve
-;; conn-manager
-;; as component
-
-
-
-
-;; (defn get-ns [kw]
-;;   (-> kw namespace keyword))
-
-
-
-
-
-;; (def config-multi
-;;   {:rpc/multi? true
-;;    :rpc/services
-;;    {:users
-;;     {:url "http://ccc.com/aaa"
-;;      :auth ["fff" "ggg"]}
-;;     :sales
-;;     {:url "http://bbb.com/ccc"
-;;      :auth ["fff" "ggg"]}}})
-
-
-
-
-
-
-
-
-;; (defn batch [client batches]
-
-;;   )
-
-
-;; (defn call-batch
-;;   [config batches]
-
-;;   (rpc-inner config (remap-batches batches))
-
-
-
-
-
-
-;;   )

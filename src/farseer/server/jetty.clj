@@ -42,19 +42,25 @@
   (.stop server))
 
 
-(defn component [config]
+(defn component
 
-  (with-meta {}
+  ([config]
+   (component config nil))
 
-    {'com.stuartsierra.component/start
-     (fn [{:as this :keys [server]}]
-       (if server
-         this
-         (let [server (start-server config this)]
-           (assoc this :server server))))
+  ([config context]
 
-     'com.stuartsierra.component/stop
-     (fn [{:as this :keys [server]}]
-       (when server
-         (stop-server server)
-         (dissoc this :server)))}))
+   (with-meta {}
+
+     {'com.stuartsierra.component/start
+      (fn [{:as this :keys [server]}]
+        (if server
+          this
+          (let [context (merge context this)
+                server (start-server config context)]
+            (assoc this :server server))))
+
+      'com.stuartsierra.component/stop
+      (fn [{:as this :keys [server]}]
+        (when server
+          (stop-server server)
+          (dissoc this :server)))})))
