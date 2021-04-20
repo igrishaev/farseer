@@ -25,6 +25,7 @@
 
 (deftest test-stub-ok
 
+  ;; TODO: reduce copy-paste
   (let [params
         {:method :post
          :url "http://127.0.0.1:8080"
@@ -51,7 +52,7 @@
                  :jsonrpc "2.0"
                  :result {:name "Ivan"
                           :email "test@test.com"}}}
-             response))))))
+               response))))))
 
 
 (deftest test-stub-not-found

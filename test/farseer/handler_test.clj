@@ -15,7 +15,7 @@
 
 
 (defn rpc-sum
-  [_ a b]
+  [_ [a b]]
   (+ a b))
 
 
@@ -51,7 +51,12 @@
     :user/create
     {:handler/function user-create
      :handler/spec-in :user/create.in
-     :handler/spec-out :user/create.out}}})
+     :handler/spec-out :user/create.out}
+
+    :weird/arity-fn
+    {:handler/function
+     (fn [_ params extra]
+       {:some :result})}}})
 
 
 (deftest test-handler-ok
@@ -251,7 +256,7 @@
 
         response (handler rpc)
 
-        [context & args] @capture]
+        [context args] @capture]
 
     (is (= {:rpc/id 1
             :rpc/method :custom/context
@@ -268,6 +273,25 @@
           :result {:foo 1}}
 
          response))))
+
+
+(deftest test-handler-wrong-arity
+
+  (let [rpc {:id 1
+             :method :weird/arity-fn
+             :params [1 2]
+             :jsonrpc "2.0"}
+        handler (make-handler config)
+        response (handler rpc)]
+
+    (is (= {:error
+            {:code -32603
+             :message "Internal error"
+             :data {:method :weird/arity-fn}}
+            :id 1
+            :jsonrpc "2.0"}
+
+           response))))
 
 
 ;; todo: check for coll?

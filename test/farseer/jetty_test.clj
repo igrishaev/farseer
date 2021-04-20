@@ -18,7 +18,7 @@
    :rpc/handlers
    {:test/add
     {:handler/function
-     (fn [_ a b]
+     (fn [_ [a b]]
        (+ a b))}}})
 
 

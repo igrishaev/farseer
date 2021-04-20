@@ -87,15 +87,10 @@
         context
         (assoc context :rpc/id id :rpc/method method)
 
-        ;; TODO assert handler (symbol)
+        ;; TODO check if handler is a symbol
 
-        arg-list
-        (if (sequential? params)
-          params [params])
-
-        ;; todo: drop apply maybe?
         result
-        (apply function context arg-list)]
+        (function context params)]
 
     (assoc this :result result)))
 
