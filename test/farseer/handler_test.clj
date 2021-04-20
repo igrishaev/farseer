@@ -253,8 +253,8 @@
 
         [context & args] @capture]
 
-    (is (= {:id 1
-            :method :custom/context
+    (is (= {:rpc/id 1
+            :rpc/method :custom/context
             :this "foo"
             :that "bar"}
            context))

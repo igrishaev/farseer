@@ -85,7 +85,7 @@
         {:handler/keys [function]} handler
 
         context
-        (assoc context :id id :method method)
+        (assoc context :rpc/id id :rpc/method method)
 
         ;; TODO assert handler (symbol)
 

@@ -9,7 +9,7 @@
 
 
 (def config
-  {:stub/methods
+  {:stub/handlers
 
    {:user/get-by-id
     {:name "Ivan"
@@ -58,7 +58,7 @@
 
   (let [params
         {:method :post
-         :url "http://127.0.0.1:8008/api"
+         :url "http://127.0.0.1:8080"
          :throw-exceptions? false
          :as :json
          :content-type :json
@@ -76,14 +76,17 @@
                 client/request
                 (select-keys [:status :body]))]
 
-        (is (= {:status 404
-                :body
-                {:id 1
-                 :jsonrpc "2.0"
-                 :error
-                 {:code -32601
-                  :message "Method not found"
-                  :data {:method "dunno/not-found"}}}}
+        (is (=
+
+             {:status 200
+              :body
+              {:error
+               {:code -32601
+                :message "Method not found"
+                :data {:method "dunno/not-found"}}
+               :id 1
+               :jsonrpc "2.0"}}
+
              response))))))
 
 
@@ -128,7 +131,7 @@
 
   (let [params
         {:method :post
-         :url "http://127.0.0.1:8008/api"
+         :url "http://127.0.0.1:8080"
          :throw-exceptions? false
          :as :json
          :content-type :json
@@ -148,14 +151,14 @@
 
         (is (=
 
-             {:status 400
+             {:status 200
               :body
-              {:id 1
-               :jsonrpc "2.0"
-               :error
-               {:code -32602
-                :message "Invalid params"
-                :data {:method "some/invalid-params"}}}}
+              {:error
+               {:code -32601
+                :message "Method not found"
+                :data {:method "some/invalid-params"}}
+               :id 1
+               :jsonrpc "2.0"}}
 
              response))))))
 
@@ -164,7 +167,7 @@
 
   (let [params
         {:method :post
-         :url "http://127.0.0.1:8008/api"
+         :url "http://127.0.0.1:8080"
          :throw-exceptions? false
          :as :json
          :coerce :always
@@ -180,7 +183,7 @@
 
         (is (=
 
-             {:status 400
+             {:status 200
               :body
               {:jsonrpc "2.0"
                :error

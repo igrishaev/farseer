@@ -128,9 +128,9 @@
 
          {:some :param
           :database {:jdbc :spec}
-          :id 1
-          :method :test/capture
-          :request
+          :rpc/id 1
+          :rpc/method :test/capture
+          :http/request
           {:ssl-client-cert nil
            :protocol "HTTP/1.1"
            :remote-addr "127.0.0.1"

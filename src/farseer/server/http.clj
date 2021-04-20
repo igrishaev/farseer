@@ -14,7 +14,7 @@
 
 
 (def malformed-response
-  {:status 400
+  {:status 200
    :headers {"Content-Type" "application/json"}
    :body
    {:jsonrpc "2.0"
@@ -65,7 +65,7 @@
             (and (= method request-method)
                  (= path uri))
             (let [response
-                  (handler body {:request request})]
+                  (handler body {:http/request request})]
               {:status 200
                :body response})
 

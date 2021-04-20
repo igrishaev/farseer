@@ -15,3 +15,7 @@
 
 (s/def :stub/handlers
   (s/map-of :rpc/method :stub/result))
+
+
+(s/def ::config
+  (s/keys :req [:stub/handlers]))
