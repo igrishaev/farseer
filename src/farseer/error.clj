@@ -26,6 +26,11 @@
    :rpc/message "Internal error"})
 
 
+(def auth-error
+  {:rpc/code    -32000
+   :rpc/message "Authentication failure"})
+
+
 (defn ->response
   [e]
 

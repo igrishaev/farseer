@@ -29,6 +29,7 @@
    [ring/ring-json]
    [ch.qos.logback/logback-classic]
    [com.stuartsierra/component]
+   [ring-basic-authentication]
 
    ]
 
@@ -48,7 +49,8 @@
 
    [ch.qos.logback/logback-classic "1.2.3"]
 
-   [com.stuartsierra/component "1.0.0"]]
+   [com.stuartsierra/component "1.0.0"]
+   [ring-basic-authentication "1.1.0"]]
 
   :release-tasks
   [["vcs" "assert-committed"]

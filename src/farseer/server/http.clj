@@ -6,9 +6,7 @@
    [farseer.spec.http :as spec.http]
    [farseer.handler :as handler]
 
-   [ring.middleware.json
-    :refer [wrap-json-body
-            wrap-json-response]]
+   [ring.middleware.json :as json]
 
    [clojure.spec.alpha :as s]))
 
@@ -20,8 +18,17 @@
    {:jsonrpc "2.0"
     :error
     {:code -32700
-     :message
-     "Invalid JSON was received by the server."}}})
+     :message "Invalid JSON was received by the server."}}})
+
+
+(def non-auth-response
+  {:status 200
+   :headers {"Content-Type" "application/json"}
+   :body
+   {:jsonrpc "2.0"
+    :error
+    {:code -32000
+     :message "Authentication failure."}}})
 
 
 (def json-body-options
@@ -29,10 +36,38 @@
    :malformed-response malformed-response})
 
 
+(def wrap-json-body
+  [json/wrap-json-body json-body-options])
+
+(def wrap-json-resp
+  [json/wrap-json-response])
+
+
+(def default-middleware
+  [wrap-json-body
+   wrap-json-resp])
+
+
 (def defaults
   {:http/method :post
    :http/path "/"
-   :http/health? true})
+   :http/health? true
+   :http/middleware default-middleware})
+
+
+(defn wrap-middleware
+  [handler middleware-list]
+  (reduce
+   (fn [result middleware]
+     (if (vector? middleware)
+
+       (let [[middleware & args] middleware]
+         (apply middleware result args))
+
+       (middleware result)))
+
+   handler
+   middleware-list))
 
 
 (defn make-app
@@ -50,8 +85,10 @@
      (let [handler
            (handler/make-handler config context)
 
-           {:http/keys [method path health?]}
-           config]
+           {:http/keys [path
+                        method
+                        health?
+                        middleware]} config]
 
        (->
 
@@ -77,5 +114,4 @@
             :else
             {:status 404}))
 
-        (wrap-json-body json-body-options)
-        (wrap-json-response))))))
+        (wrap-middleware middleware))))))

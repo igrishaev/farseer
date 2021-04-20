@@ -1,9 +1,12 @@
 (ns farseer.jetty-test
   (:require
    [farseer.server.jetty :as jetty]
+   [farseer.server.http :as http]
 
    [com.stuartsierra.component :as component]
    [clj-http.client :as client]
+   [ring.middleware.basic-authentication
+    :refer [wrap-basic-authentication]]
 
    [clojure.test :refer [deftest is]]))
 
@@ -32,40 +35,36 @@
 
 (deftest test-jetty-ok
 
-  (let [server (jetty/start-server config)
+  (jetty/with-server [config]
 
-        resp (client/post
-              url-server
-              {:as :json
-               :content-type :json
-               :throw-exceptions? false
-               :coerce :always
-               :form-params {:id 1
-                             :jsonrpc "2.0"
-                             :method :test/add
-                             :params [1 2]}})
+    (let [resp (client/post
+                url-server
+                {:as :json
+                 :content-type :json
+                 :throw-exceptions? false
+                 :coerce :always
+                 :form-params {:id 1
+                               :jsonrpc "2.0"
+                               :method :test/add
+                               :params [1 2]}})
 
-        {:keys [status body]} resp]
+          {:keys [status body]} resp]
 
-    (is (= 200 status))
-    (is (= {:id 1 :jsonrpc "2.0" :result 3}
-           body))
-
-    (jetty/stop-server server)))
+      (is (= 200 status))
+      (is (= {:id 1 :jsonrpc "2.0" :result 3}
+             body)))))
 
 
 (deftest test-jetty-health
 
-  (let [server (jetty/start-server config)
+  (jetty/with-server [config]
 
-        resp (client/get url-health)
+    (let [resp (client/get url-health)
 
-        {:keys [status body]} resp]
+          {:keys [status body]} resp]
 
-    (is (= 200 status))
-    (is (= "" body))
-
-    (jetty/stop-server server)))
+      (is (= 200 status))
+      (is (= "" body)))))
 
 
 (defn make-system [config]
@@ -155,3 +154,63 @@
          @capture))
 
     (component/stop sys-started)))
+
+
+(deftest test-auth-middleware
+
+  (let [fn-auth?
+        (fn [user pass]
+          (and (= "foo" user)
+               (= "bar" pass)))
+
+        middleware-auth
+        [wrap-basic-authentication
+         fn-auth? "auth" http/non-auth-response]
+
+        middleware-stack
+        [middleware-auth
+         http/wrap-json-body
+         http/wrap-json-resp]
+
+        config*
+        (assoc config :http/middleware middleware-stack)]
+
+    (jetty/with-server [config*]
+
+      (let [resp1 (client/post
+                   url-server
+                   {:basic-auth ["foo" "bar"]
+                    :as :json
+                    :content-type :json
+                    :throw-exceptions? false
+                    :coerce :always
+                    :form-params {:id 1
+                                  :jsonrpc "2.0"
+                                  :method :test/add
+                                  :params [1 2]}})
+
+            {:keys [status body]} resp1]
+
+        (is (= 200 status))
+        (is (= {:id 1 :jsonrpc "2.0" :result 3}
+               body)))
+
+      (let [resp2 (client/post
+                   url-server
+                   {:basic-auth ["test" "dunno"]
+                    :as :json
+                    :content-type :json
+                    :throw-exceptions? false
+                    :coerce :always
+                    :form-params {:id 1
+                                  :jsonrpc "2.0"
+                                  :method :test/add
+                                  :params [1 2]}})
+
+            {:keys [status body]} resp2]
+
+        (is (= 200 status))
+        (is (= {:jsonrpc "2.0"
+                :error {:code -32000
+                        :message "Authentication failure."}}
+             body))))))

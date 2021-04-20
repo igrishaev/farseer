@@ -42,6 +42,15 @@
   (.stop server))
 
 
+(defmacro with-server
+  [[config & [context]] & body]
+  `(let [server# (start-server ~config ~context)]
+     (try
+       ~@body
+       (finally
+         (stop-server server#)))))
+
+
 (defn component
 
   ([config]
