@@ -15,60 +15,52 @@
     {:name "Ivan"
      :email "test@test.com"}
 
-    ;; :some/invalid-params
-    ;; (stub/->rpc-error :invalid-params)
+    :some/trigger-error
+    stub/invalid-request
 
     :some/failure
     (fn [& _]
       (/ 0 0))}})
 
 
+(def http-params
+  {:method :post
+   :url "http://127.0.0.1:8080"
+   :throw-exceptions? false
+   :as :json
+   :content-type :json
+   :coerce :always
+   :form-params
+   {:id 1
+    :jsonrpc "2.0"
+    :method :user/get-by-id
+    :params [100]}})
+
+
 (deftest test-stub-ok
 
-  ;; TODO: reduce copy-paste
-  (let [params
-        {:method :post
-         :url "http://127.0.0.1:8080"
-         :throw-exceptions? false
-         :as :json
-         :content-type :json
-         :coerce :always
-         :form-params
-         {:id 1
-          :jsonrpc "2.0"
-          :method :user/get-by-id
-          :params [100]}}]
+  (stub/with-stub config
 
-    (stub/with-stub config
+    (let [response
+          (-> http-params
+              client/request
+              (select-keys [:status :body]))]
 
-      (let [response
-            (-> params
-                client/request
-                (select-keys [:status :body]))]
-
-        (is (= {:status 200
-                :body
-                {:id 1
-                 :jsonrpc "2.0"
-                 :result {:name "Ivan"
-                          :email "test@test.com"}}}
-               response))))))
+      (is (= {:status 200
+              :body
+              {:id 1
+               :jsonrpc "2.0"
+               :result {:name "Ivan"
+                        :email "test@test.com"}}}
+             response)))))
 
 
 (deftest test-stub-not-found
 
   (let [params
-        {:method :post
-         :url "http://127.0.0.1:8080"
-         :throw-exceptions? false
-         :as :json
-         :content-type :json
-         :coerce :always
-         :form-params
-         {:id 1
-          :jsonrpc "2.0"
-          :method :dunno/not-found
-          :params [100]}}]
+        (assoc-in http-params
+                  [:form-params :method]
+                  :dunno/not-found)]
 
     (stub/with-stub config
 
@@ -91,21 +83,12 @@
              response))))))
 
 
-#_
 (deftest test-stub-failing
 
   (let [params
-        {:method :post
-         :url "http://127.0.0.1:8008/api"
-         :throw-exceptions? false
-         :as :json
-         :content-type :json
-         :coerce :always
-         :form-params
-         {:id 1
-          :jsonrpc "2.0"
-          :method :some/failure
-          :params [100]}}]
+        (assoc-in http-params
+                  [:form-params :method]
+                  :some/failure)]
 
     (stub/with-stub config
 
@@ -116,7 +99,7 @@
 
         (is (=
 
-             {:status 500
+             {:status 200
               :body
               {:id 1
                :jsonrpc "2.0"
@@ -128,20 +111,12 @@
              response))))))
 
 
-(deftest test-stub-custom-invalid-params
+(deftest test-stub-trigger-error
 
   (let [params
-        {:method :post
-         :url "http://127.0.0.1:8080"
-         :throw-exceptions? false
-         :as :json
-         :content-type :json
-         :coerce :always
-         :form-params
-         {:id 1
-          :jsonrpc "2.0"
-          :method :some/invalid-params
-          :params [100]}}]
+        (assoc-in http-params
+                  [:form-params :method]
+                  :some/trigger-error)]
 
     (stub/with-stub config
 
@@ -155,9 +130,9 @@
              {:status 200
               :body
               {:error
-               {:code -32601
-                :message "Method not found"
-                :data {:method "some/invalid-params"}}
+               {:code -32600
+                :message "Invalid Request"
+                :data {:method "some/trigger-error"}}
                :id 1
                :jsonrpc "2.0"}}
 
@@ -167,13 +142,9 @@
 (deftest test-stub-malformed-json
 
   (let [params
-        {:method :post
-         :url "http://127.0.0.1:8080"
-         :throw-exceptions? false
-         :as :json
-         :coerce :always
-         :content-type :json
-         :body "not a JSON"}]
+        (-> http-params
+            (dissoc :form-params)
+            (assoc :body "not a json"))]
 
     (stub/with-stub config
 

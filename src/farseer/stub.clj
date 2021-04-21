@@ -2,6 +2,7 @@
   (:require
    [farseer.server.jetty :as jetty]
    [farseer.spec.stub :as spec.stub]
+   [farseer.error :as e]
 
    [clojure.tools.logging :as log]
    [clojure.spec.alpha :as s]))
@@ -70,3 +71,36 @@
 (defmacro with-stubs
   [[& configs] & body]
   (apply with-stubs-impl configs body))
+
+
+;;
+;; Handlers that trigger RPC exceptions.
+;;
+
+(defn ->err-handler [data-error]
+  (fn [context params]
+    (e/error! data-error)))
+
+
+(def parse-error
+  (->err-handler e/parse-error))
+
+
+(def invalid-request
+  (->err-handler e/invalid-request))
+
+
+(def not-found
+  (->err-handler e/not-found))
+
+
+(def invalid-params
+  (->err-handler e/invalid-params))
+
+
+(def internal-error
+  (->err-handler e/internal-error))
+
+
+(def auth-error
+  (->err-handler e/auth-error))

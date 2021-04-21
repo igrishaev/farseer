@@ -131,6 +131,7 @@
 (defn rpc-error-handler
   [{:as this :keys [rpc]} e]
 
+  ;; TODO: ->response refactor
   (let [response (e/->response e)
 
         {:keys [id method jsonrpc]}
