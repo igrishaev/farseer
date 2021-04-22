@@ -270,9 +270,9 @@
   ([config context]
 
    (let [config
-         (config/add-defaults config defaults)]
-
-     (s/assert ::spec.handler/config config)
+         (->> defaults
+              (config/rebase config)
+              (s/assert ::spec.handler/config))]
 
      (fn rpc-handler
 

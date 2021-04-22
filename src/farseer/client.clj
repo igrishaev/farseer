@@ -48,7 +48,8 @@
 
 
 (defn make-client [config]
-  (->> (config/add-defaults config defaults)
+  (->> defaults
+       (config/rebase config)
        (s/assert ::spec.client/config)))
 
 

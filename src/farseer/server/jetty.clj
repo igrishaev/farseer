@@ -25,17 +25,17 @@
   ([config context]
 
    (let [config
-         (config/add-defaults config defaults)]
+         (->> defaults
+              (config/rebase config)
+              (s/assert ::spec.jetty/config))
 
-     (s/assert ::spec.jetty/config config)
+         app
+         (http/make-app config context)
 
-     (let [app
-           (http/make-app config context)
+         jetty-opt
+         (config/query-keys config "jetty")]
 
-           jetty-opt
-           (config/query-keys config "jetty")]
-
-       (run-jetty app jetty-opt)))))
+     (run-jetty app jetty-opt))))
 
 
 (defn stop-server [^Server server]

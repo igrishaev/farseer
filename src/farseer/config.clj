@@ -12,5 +12,5 @@
     config)))
 
 
-(defn add-defaults [config defaults]
+(defn rebase [config defaults]
   (merge defaults config))

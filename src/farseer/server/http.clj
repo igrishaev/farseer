@@ -78,40 +78,40 @@
   ([config context]
 
    (let [config
-         (config/add-defaults config defaults)]
+         (->> defaults
+              (config/rebase config)
+              (s/assert ::spec.http/config))
 
-     (s/assert ::spec.http/config config)
+         handler
+         (handler/make-handler config context)
 
-     (let [handler
-           (handler/make-handler config context)
+         {:http/keys [path
+                      method
+                      health?
+                      middleware]} config]
 
-           {:http/keys [path
-                        method
-                        health?
-                        middleware]} config]
+     (->
 
-       (->
+      (fn [{:as request
+            :keys [uri
+                   body
+                   request-method]}]
 
-        (fn [{:as request
-              :keys [uri
-                     body
-                     request-method]}]
+        (cond
 
-          (cond
+          (and (= method request-method)
+               (= path uri))
+          (let [response
+                (handler body {:http/request request})]
+            {:status 200
+             :body response})
 
-            (and (= method request-method)
-                 (= path uri))
-            (let [response
-                  (handler body {:http/request request})]
-              {:status 200
-               :body response})
+          (and health?
+               (or (= "/health" uri)
+                   (= "/healthz" uri)))
+          {:status 200}
 
-            (and health?
-                 (or (= "/health" uri)
-                     (= "/healthz" uri)))
-            {:status 200}
+          :else
+          {:status 404}))
 
-            :else
-            {:status 404}))
-
-        (wrap-middleware middleware))))))
+      (wrap-middleware middleware)))))
