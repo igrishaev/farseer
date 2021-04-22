@@ -63,19 +63,3 @@
 (defn internal-error!
   [& [data e]]
   (error! (merge internal-error data) e))
-
-
-(defn ->response
-  [e]
-
-  (let [data-full
-        (merge internal-error (ex-data e))
-
-        {:rpc/keys [code message data]}
-        data-full]
-
-    {:error (cond-> {:code code
-                     :message message}
-
-              data
-              (assoc :data data))}))

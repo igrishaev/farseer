@@ -113,6 +113,7 @@
     (if explain
 
       (do
+        ;; todo rpc/data?
         (log/error explain)
         (e/internal-error!))
 
@@ -129,18 +130,40 @@
 
 
 (defn rpc-error-handler
-  [{:as this :keys [rpc]} e]
 
-  ;; TODO: ->response refactor
-  (let [response (e/->response e)
+  ([e]
+   (rpc-error-handler e nil))
 
-        {:keys [id method jsonrpc]}
-        rpc]
+  ;; TODO: log/error
 
-    (-> response
-        (assoc :id id)
-        (assoc :jsonrpc jsonrpc)
-        (assoc-in [:error :data :method] method))))
+  ([e rpc]
+
+   (let [data-full
+         (merge e/internal-error (ex-data e))
+
+         {:rpc/keys [code message data]}
+         data-full
+
+         {:keys [id method jsonrpc]}
+         rpc
+
+         response
+         {:error {:code code
+                  :message message}}]
+
+     (cond-> response
+
+       data
+       (assoc-in [:error :data] data)
+
+       id
+       (assoc :id id)
+
+       jsonrpc
+       (assoc :jsonrpc jsonrpc)
+
+       method
+       (assoc-in [:error :data :method] method)))))
 
 
 (defn coerce-rpc
@@ -157,7 +180,7 @@
 
 
 (defn process-rpc-single
-  [this]
+  [{:as this :keys [rpc]}]
   (-> this
       coerce-rpc
       find-method
@@ -166,7 +189,7 @@
       validate-output
       compose-response
       (with-try [e]
-        (rpc-error-handler this e))))
+        (rpc-error-handler e rpc))))
 
 
 (defn check-batch-limit
@@ -290,6 +313,4 @@
             step-3-process-rpc
 
             (with-try [e]
-              ;; todo no log
-              (log/error e)
-              (e/->response e))))))))
+              (rpc-error-handler e))))))))
