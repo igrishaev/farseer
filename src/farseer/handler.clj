@@ -96,9 +96,11 @@
 
 
 (defn validate-output
-  [{:as this :keys [config result handler]}]
+  [{:as this :keys [config result handler rpc]}]
 
-  (let [{:handler/keys [spec-out]} handler
+  (let [{:keys [id method]} rpc
+
+        {:handler/keys [spec-out]} handler
 
         {:rpc/keys [spec-validate-out?]}
         config
@@ -111,12 +113,8 @@
           (explain-str spec-out result))]
 
     (if explain
-
-      (do
-        ;; todo rpc/data?
-        (log/error explain)
-        (e/internal-error!))
-
+      ;; TODO: better log
+      (e/internal-error! {:explain explain})
       this)))
 
 
@@ -134,22 +132,29 @@
   ([e]
    (rpc-error-handler e nil))
 
-  ;; TODO: log/error
-
   ([e rpc]
 
-   (let [data-full
-         (merge e/internal-error (ex-data e))
+   (let [exception-data
+         (config/rebase (ex-data e) e/internal-error)
 
-         {:rpc/keys [code message data]}
-         data-full
+         {:rpc/keys [code message data]
+          :log/keys [level stacktrace?]}
+         exception-data
 
          {:keys [id method jsonrpc]}
          rpc
 
          response
          {:error {:code code
-                  :message message}}]
+                  :message message}}
+
+         report
+         (format "Error: %s, id: %s, method: %s, code: %s, message: %s"
+                 (ex-message e) id method code message)]
+
+     (if stacktrace?
+       (log/log level e report)
+       (log/log level report))
 
      (cond-> response
 

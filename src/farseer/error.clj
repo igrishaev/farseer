@@ -2,33 +2,45 @@
 
 
 (def parse-error
-  {:rpc/code    -32700
-   :rpc/message "Parse error"})
+  {:log/level       :info
+   :log/stacktrace? false
+   :rpc/code        -32700
+   :rpc/message     "Parse error"})
 
 
 (def invalid-request
-  {:rpc/code    -32600
-   :rpc/message "Invalid Request"})
+  {:log/level       :info
+   :log/stacktrace? false
+   :rpc/code        -32600
+   :rpc/message     "Invalid Request"})
 
 
 (def not-found
-  {:rpc/code    -32601
-   :rpc/message "Method not found"})
+  {:log/level       :info
+   :log/stacktrace? false
+   :rpc/code        -32601
+   :rpc/message     "Method not found"})
 
 
 (def invalid-params
-  {:rpc/code    -32602
-   :rpc/message "Invalid params"})
+  {:log/level       :info
+   :log/stacktrace? false
+   :rpc/code        -32602
+   :rpc/message     "Invalid params"})
 
 
 (def internal-error
-  {:rpc/code    -32603
-   :rpc/message "Internal error"})
+  {:log/level       :error
+   :log/stacktrace? true
+   :rpc/code        -32603
+   :rpc/message     "Internal error"})
 
 
 (def auth-error
-  {:rpc/code    -32000
-   :rpc/message "Authentication failure"})
+  {:log/level       :info
+   :log/stacktrace? false
+   :rpc/code        -32000
+   :rpc/message     "Authentication failure"})
 
 
 (defn error!
