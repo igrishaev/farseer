@@ -136,11 +136,11 @@
            :headers
            {"connection" "close"
             "user-agent" "Apache-HttpClient/4.5.13 (Java/14.0.2)"
-            "host" "127.0.0.1:8008"
+            "host" (format "127.0.0.1:%s" PORT)
             "accept-encoding" "gzip, deflate"
             "content-length" "48"
             "content-type" "application/json"}
-           :server-port 8008
+           :server-port PORT
            :content-length 48
            :content-type "application/json"
            :character-encoding "UTF-8"
