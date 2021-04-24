@@ -113,8 +113,10 @@
           (explain-str spec-out result))]
 
     (if explain
-      ;; TODO: better log
-      (e/internal-error! {:explain explain})
+      (throw
+       (ex-info
+        "RPC result doesn't match the output spec"
+        {:explain explain}))
       this)))
 
 
@@ -135,7 +137,7 @@
   ([e rpc]
 
    (let [exception-data
-         (config/rebase (ex-data e) e/internal-error)
+         (merge e/internal-error (ex-data e))
 
          {:rpc/keys [code message data]
           :log/keys [level stacktrace?]}
@@ -149,7 +151,7 @@
                   :message message}}
 
          report
-         (format "Error: %s, id: %s, method: %s, code: %s, message: %s"
+         (format "%s, id: %s, method: %s, code: %s, message: %s"
                  (ex-message e) id method code message)]
 
      (if stacktrace?
