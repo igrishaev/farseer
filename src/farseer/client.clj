@@ -94,6 +94,37 @@
        (stop-conn-mgr this))}))
 
 
+(defn ensure-handler [response payload]
+
+  (if (sequential? response) ;; return batch as-is
+    response
+
+    (let [{:keys [id result error]} response]
+
+      (if (empty? error)
+        result
+
+        (let [{:keys [code message data]}
+              error
+
+              {:keys [id method]}
+              (when (map? payload)
+                payload)
+
+              context
+              {:rpc/id id
+               :rpc/method method
+               :rpc/code code
+               :rpc/message message
+               :rpc/data data}]
+
+          (throw
+           (ex-info
+            (format "RPC error, id: %s, method: %s, code: %s, message: %s"
+                    id method code message)
+            context)))))))
+
+
 (defn make-request [config payload]
 
   (s/assert ::spec.rpc/rpc payload)
@@ -102,46 +133,20 @@
                     ensure?]}
         config
 
-        fn-ensure
-        (if ensure?
-          (fn [response]
-            (if (sequential? response)
-              response
-              (let [{:keys [id result error]} response]
-                (if error
-                  (let [{:keys [code message data]}
-                        error
-
-                        {:keys [id method]}
-                        (when (map? payload)
-                          payload)
-
-                        context
-                        {:rpc/id id
-                         :rpc/method method
-                         :rpc/code code
-                         :rpc/message message
-                         :rpc/data data}]
-
-                    (throw
-                     (ex-info
-                      (format "RPC error, id: %s, method: %s, code: %s, message: %s"
-                              id method code message)
-                      context)))
-                  result))))
-          identity)
-
-
         request
         (-> config
             (config/query-keys "http")
-            (assoc :form-params payload))]
+            (assoc :form-params payload))
 
-    (-> request
-        fn-before-send
-        client/request
-        :body
-        fn-ensure)))
+        response
+        (-> request
+            fn-before-send
+            client/request
+            :body)]
+
+    (if ensure?
+      (ensure-handler response payload)
+      response)))
 
 
 (defn make-payload
