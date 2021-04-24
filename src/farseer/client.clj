@@ -98,8 +98,6 @@
 
   (s/assert ::spec.rpc/rpc payload)
 
-  (log/debugf "RPC call: %s" payload)
-
   (let [{:rpc/keys [fn-before-send]}
         config
 
