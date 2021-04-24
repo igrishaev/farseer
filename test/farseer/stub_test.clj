@@ -8,8 +8,12 @@
    [clojure.test :refer [deftest is]]))
 
 
+(def PORT 18008)
+
+
 (def config
-  {:stub/handlers
+  {:jetty/port PORT
+   :stub/handlers
 
    {:user/get-by-id
     {:name "Ivan"
@@ -25,7 +29,7 @@
 
 (def http-params
   {:method :post
-   :url "http://127.0.0.1:8080"
+   :url (format "http://127.0.0.1:%s" PORT)
    :throw-exceptions? false
    :as :json
    :content-type :json

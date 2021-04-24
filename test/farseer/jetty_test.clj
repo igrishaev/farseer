@@ -11,7 +11,7 @@
    [clojure.test :refer [deftest is]]))
 
 
-(def PORT 8008)
+(def PORT 18008)
 
 (def PATH "/v1/api-rpc")
 
