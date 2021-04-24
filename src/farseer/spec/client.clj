@@ -10,6 +10,7 @@
 
 
 (s/def :rpc/fn-before-send fn?)
+(s/def :rpc/ensure? boolean?)
 
 (s/def :http/url    string?)
 (s/def :http/method #{:get :post :put :delete})
@@ -18,6 +19,7 @@
 (s/def ::config
   (s/keys :req [:rpc/fn-id
                 :rpc/fn-before-send
+                :rpc/ensure?
 
                 :http/url
                 :http/method
