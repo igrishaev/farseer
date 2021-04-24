@@ -11,29 +11,6 @@
    [clojure.spec.alpha :as s]))
 
 
-;; review sequential?
-
-;; make name
-
-;; check config with spec
-
-;; check functions in config
-;; auto-load func ns in config
-
-;; better explain (expound?)
-
-;; method overrides
-
-;; spec for config
-;; validate config in handler
-
-;; handler overrides
-;; discover handler
-;; rename functions
-
-;; no-log field maybe?
-
-
 (defn explain-str [spec data]
   (let [out (s/explain-str spec data)]
     (when-not (= out "Success!\n")
@@ -86,8 +63,6 @@
 
         context
         (assoc context :rpc/id id :rpc/method method)
-
-        ;; TODO check if handler is a symbol
 
         result
         (function context params)]
