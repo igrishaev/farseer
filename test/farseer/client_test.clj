@@ -30,7 +30,12 @@
     :user/get-by-id
     {:handler/function
      (fn [& _]
-       {:name "Ivan"})}}})
+       {:name "Ivan"})}
+
+    :server/error
+    {:handler/function
+     (fn [& _]
+       (/ 0 0))}}})
 
 
 (defn jetty-fixture [t]
@@ -189,3 +194,42 @@
 
         (is (= {:jsonrpc "2.0" :result {:name "Ivan"}}
                (drop-id result)))))))
+
+
+(deftest test-client-ensure-true-ok
+
+  (let [config* (assoc config-client :rpc/ensure? true)
+        client (client/make-client config*)
+        result (client/call client :user/get-by-id [1])]
+
+    (is (= result {:name "Ivan"}))))
+
+
+(deftest test-client-ensure-true-ok-batch
+
+  (let [config* (assoc config-client :rpc/ensure? true)
+        client (client/make-client config*)
+        result (client/batch client
+                             [[:user/get-by-id [1]]
+                              [:user/get-by-id [2]]
+                              [:user/get-by-id [3]]])]
+
+    (is (=
+
+         [{:jsonrpc "2.0" :result {:name "Ivan"}}
+          {:jsonrpc "2.0" :result {:name "Ivan"}}
+          {:jsonrpc "2.0" :result {:name "Ivan"}}]
+
+         (mapv drop-id result)))))
+
+
+(deftest test-client-ensure-true-err
+
+  (let [config* (assoc config-client :rpc/ensure? true)
+        client (client/make-client config*)]
+
+    (is (thrown-with-msg?
+         clojure.lang.ExceptionInfo
+         #"RPC error"
+
+         (client/call client :server/error [1])))))

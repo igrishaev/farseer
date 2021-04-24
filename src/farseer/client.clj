@@ -26,10 +26,10 @@
     (throw (ex-info "Wrong ID function" {:fn-id fn-id}))))
 
 
-
 (def defaults
   {:rpc/fn-before-send identity
    :rpc/fn-id          :id/int
+   :rpc/ensure?        false
 
    :http/method             :post
    :http/headers            {:user-agent "farseer.client"}
@@ -98,10 +98,40 @@
 
   (s/assert ::spec.rpc/rpc payload)
 
-  (let [{:rpc/keys [fn-before-send]}
+  (let [{:rpc/keys [fn-before-send
+                    ensure?]}
         config
 
-        ;; TODO: prepare http/client keys
+        fn-ensure
+        (if ensure?
+          (fn [response]
+            (if (sequential? response)
+              response
+              (let [{:keys [id result error]} response]
+                (if error
+                  (let [{:keys [code message data]}
+                        error
+
+                        {:keys [id method]}
+                        (when (map? payload)
+                          payload)
+
+                        context
+                        {:rpc/id id
+                         :rpc/method method
+                         :rpc/code code
+                         :rpc/message message
+                         :rpc/data data}]
+
+                    (throw
+                     (ex-info
+                      (format "RPC error, id: %s, method: %s, code: %s, message: %s"
+                              id method code message)
+                      context)))
+                  result))))
+          identity)
+
+
         request
         (-> config
             (config/query-keys "http")
@@ -110,7 +140,8 @@
     (-> request
         fn-before-send
         client/request
-        :body)))
+        :body
+        fn-ensure)))
 
 
 (defn make-payload
