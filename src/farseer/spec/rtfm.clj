@@ -6,7 +6,7 @@
 
 (s/def :doc/title       string?)
 (s/def :doc/description string?)
-(s/def :doc/file        string?)
+(s/def :doc/resource    string?)
 (s/def :doc/ignore?     boolean?)
 (s/def :doc/endpoint    string?)
 

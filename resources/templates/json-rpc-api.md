@@ -1,12 +1,15 @@
 
+{% if title %}
 # {{ title }}
+{% endif %}
 
+{% if description %}
 {{ description }}
+{% endif %}
 
-{# {{ file }} #}
-
-{# {{ file }} #}
-
+{% if resource %}
+{{ handler.resource }}
+{% endif %}
 
 {% for handler in handlers %}
 
@@ -16,16 +19,26 @@
 
 {{ handler.description }}
 
-Intput schema:
+{% if handler.resource %}
+{{ handler.resource }}
+{% endif %}
 
+{% if handler.spec-in %}
+<details>
+<summary>Intput schema</summary>
 ```json
 {{ handler.spec-in|json-pp|safe }}
 ```
+</details>
+{% endif %}
 
-Output schema:
-
+{% if handler.spec-out %}
+<details>
+<summary>Output schema</summary>
 ```json
 {{ handler.spec-out|json-pp|safe }}
 ```
+</details>
+{% endif %}
 
 {% endfor %}
