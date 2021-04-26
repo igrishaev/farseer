@@ -30,8 +30,8 @@
    [ch.qos.logback/logback-classic]
    [com.stuartsierra/component]
    [ring-basic-authentication]
-
-   ]
+   [metosin/spec-tools]
+   [selmer]]
 
   :managed-dependencies
   [[farseer-handler :version]
@@ -50,7 +50,9 @@
    [ch.qos.logback/logback-classic "1.2.3"]
 
    [com.stuartsierra/component "1.0.0"]
-   [ring-basic-authentication "1.1.0"]]
+   [ring-basic-authentication "1.1.0"]
+   [metosin/spec-tools "0.10.5"]
+   [selmer "1.12.34"]]
 
   :release-tasks
   [["vcs" "assert-committed"]

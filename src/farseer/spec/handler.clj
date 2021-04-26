@@ -23,15 +23,11 @@
 
 (s/def :handler/spec-in     qualified-keyword?)
 (s/def :handler/spec-out    qualified-keyword?)
-(s/def :handler/title       string?)
-(s/def :handler/description string?)
 
 (s/def :rpc/handler
   (s/keys :req [:handler/function]
           :opt [:handler/spec-in
-                :handler/spec-out
-                :handler/title
-                :handler/description]))
+                :handler/spec-out]))
 
 (s/def ::config
   (s/keys
