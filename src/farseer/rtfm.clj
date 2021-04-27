@@ -79,6 +79,7 @@
 ;; add to examples
 ;; move resources
 ;; decide on spec
+;; dump to file function
 
 (defn generate-doc
   [config template]
