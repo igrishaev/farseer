@@ -27,7 +27,7 @@
 <details>
 <summary>Intput schema</summary>
 ```json
-{{ handler.spec-in|json-pp|safe }}
+{{ handler.spec-in|json-pretty|safe }}
 ```
 </details>
 {% endif %}
@@ -36,7 +36,7 @@
 <details>
 <summary>Output schema</summary>
 ```json
-{{ handler.spec-out|json-pp|safe }}
+{{ handler.spec-out|json-pretty|safe }}
 ```
 </details>
 {% endif %}

@@ -9,23 +9,13 @@
 (s/def :doc/resource    string?)
 (s/def :doc/ignore?     boolean?)
 (s/def :doc/endpoint    string?)
-
-
-#_
-(s/def :rpc/handler
-  (s/merge
-   :rpc/handler
-   (s/keys :opt [:doc/title
-                 :doc/description
-                 :doc/file
-                 :doc/ignore?])))
-
-
-
+(s/def :doc/sorting     #{:method :title})
 
 
 (s/def ::config
   (s/keys :opt [:doc/title
                 :doc/description
-                :doc/file
-                :doc/endpoint]))
+                :doc/resource
+                :doc/ignore?
+                :doc/endpoint
+                :doc/sorting]))
