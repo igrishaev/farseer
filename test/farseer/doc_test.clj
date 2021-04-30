@@ -1,6 +1,6 @@
-(ns farseer.rtfm-test
+(ns farseer.doc-test
   (:require
-   [farseer.rtfm :as rtfm]
+   [farseer.doc :as doc]
 
    [clojure.spec.alpha :as s]
    [clojure.test :refer [deftest is]]))
@@ -39,7 +39,7 @@
 
 (deftest test-context-ok
 
-  (let [context (rtfm/config->context config)]
+  (let [context (doc/config->context config)]
 
     (is (=
 
@@ -78,4 +78,4 @@
 
     (is (thrown?
          Exception
-         (rtfm/config->context config*)))))
+         (doc/config->context config*)))))

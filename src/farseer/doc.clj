@@ -1,10 +1,11 @@
-(ns farseer.rtfm
+(ns farseer.doc
   (:require
    [farseer.config :as config]
    [farseer.spec.rtfm :as spec.rtfm]
 
    [spec-tools.json-schema :as js]
    [selmer.parser :as parser]
+   [selmer.filters :as filters]
    [cheshire.core :as json]
 
    [clojure.spec.alpha :as s]
@@ -14,7 +15,7 @@
 (defn ->resource [path]
   (or
    (clojure.java.io/resource path)
-   (no-resource! path)))
+   (throw (new Exception (format "Resource not found: %s" path)))))
 
 
 (defn set-resource-path [path]
