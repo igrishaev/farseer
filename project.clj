@@ -12,14 +12,21 @@
    [exoscale/lein-replace "0.1.1"]]
 
   :sub ["farseer-handler"
+        "farseer-http"
+        "farseer-jetty"
+        "farseer-stub"
         "farseer-client"
-        "farseer-stub"]
+        "farseer-doc"]
 
   :dependencies
   [
+
    ;; [farseer-handler]
-   ;; [farseer-client]
+   ;; [farseer-http]
+   ;; [farseer-jetty]
    ;; [farseer-stub]
+   ;; [farseer-client]
+   ;; [farseer-doc]
 
    [org.clojure/clojure]
    [org.clojure/tools.logging]
