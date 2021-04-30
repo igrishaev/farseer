@@ -26,4 +26,6 @@
 
   :dependencies
   [[farseer-handler]
+
+   [ring/ring-mock]
    [ring/ring-json]])
