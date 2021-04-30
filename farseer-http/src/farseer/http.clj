@@ -1,4 +1,4 @@
-(ns farseer.server.http
+(ns farseer.http
   (:require
    [farseer.config :as config]
    [farseer.error :as e]
@@ -94,7 +94,7 @@
 
       (fn [{:as request
             :keys [uri
-                   body
+                   body ;; todo :body param
                    request-method]}]
 
         (cond

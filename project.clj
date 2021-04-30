@@ -28,12 +28,19 @@
    ;; [farseer-client]
    ;; [farseer-doc]
 
-   [org.clojure/clojure]
+   ;; [org.clojure/clojure]
+
+
+   ;; [ring/ring-json]
+
+
    [org.clojure/tools.logging]
    [clj-http]
    [cheshire]
    [ring/ring-jetty-adapter]
-   [ring/ring-json]
+
+
+
    [ch.qos.logback/logback-classic]
    [com.stuartsierra/component]
    [ring-basic-authentication]
