@@ -11,6 +11,17 @@
    [clojure.java.io :as io]))
 
 
+(defn ->resource [path]
+  (or
+   (clojure.java.io/resource path)
+   (no-resource! path)))
+
+
+(defn set-resource-path [path]
+  (parser/set-resource-path!
+   (->resource path)))
+
+
 (filters/add-filter!
  :json-pretty
  (fn [data]
@@ -19,10 +30,7 @@
 
 (defn slurp-resource [path]
   (-> path
-      io/resource
-      (or (throw
-           (new Exception
-                (format "resource not found: %s" path))))
+      ->resource
       slurp))
 
 
@@ -83,16 +91,6 @@
           (sort-by sorting))}))
 
 
-
-
-
-;; tests
-;; add to examples
-;; move resources
-;; decide on spec
-;; dump to file function
-;; resource path
-
 (defn generate-doc
   [config template outfile]
   (->> config
@@ -103,8 +101,9 @@
 
 
 #_
-(parser/set-resource-path!
- (clojure.java.io/resource "templates"))
+(set-resource-path "templates")
 
 #_
-(generate-doc cfg "json-rpc-api.md" "test.md")
+(generate-doc cfg
+              "farseer/default.md"
+              "test.md")

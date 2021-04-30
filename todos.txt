@@ -20,3 +20,10 @@
 ;; rename functions
 
 ;; no-log field maybe?
+
+;; rtfm
+
+;; rename to doc
+;; add to examples
+;; move resources
+;; dump to file function

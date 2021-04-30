@@ -73,5 +73,9 @@
 
 (deftest test-broken-config
 
-  (rtfm/config->context (assoc-in config [:rpc/handlers :user/delete :doc/title] 42))
-  )
+  (let [config*
+        (assoc-in config [:rpc/handlers :user/delete :doc/title] 42)]
+
+    (is (thrown?
+         Exception
+         (rtfm/config->context config*)))))
