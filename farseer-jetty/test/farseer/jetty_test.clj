@@ -1,7 +1,7 @@
 (ns farseer.jetty-test
   (:require
-   [farseer.server.jetty :as jetty]
-   [farseer.server.http :as http]
+   [farseer.jetty :as jetty]
+   [farseer.http :as http]
 
    [com.stuartsierra.component :as component]
    [clj-http.client :as client]

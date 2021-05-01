@@ -1,7 +1,7 @@
-(ns farseer.server.jetty
+(ns farseer.jetty
   (:require
    [farseer.config :as config]
-   [farseer.server.http :as http]
+   [farseer.http :as http]
    [farseer.spec.jetty :as spec.jetty]
 
    [ring.adapter.jetty :refer [run-jetty]]
@@ -38,10 +38,11 @@
      (run-jetty app jetty-opt))))
 
 
-(defn stop-server [^Server server]
-  (.stop server))
+(defn stop-server [server]
+  (.stop ^Server server))
 
 
+;; TODO: Reflection warning, ring/adapter/jetty.clj:45:3 - call to org.eclipse.jetty.server.ServerConnector ctor can't be resolved.
 (defmacro with-server
   [[config & [context]] & body]
   `(let [server# (start-server ~config ~context)]

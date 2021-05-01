@@ -14,6 +14,7 @@
   :sub ["farseer-handler"
         "farseer-http"
         "farseer-jetty"
+
         "farseer-stub"
         "farseer-client"
         "farseer-doc"]
@@ -24,6 +25,7 @@
    ;; [farseer-handler]
    ;; [farseer-http]
    ;; [farseer-jetty]
+
    ;; [farseer-stub]
    ;; [farseer-client]
    ;; [farseer-doc]
@@ -37,8 +39,8 @@
    [org.clojure/tools.logging]
    [clj-http]
    [cheshire]
-   [ring/ring-jetty-adapter]
 
+   [ring/ring-jetty-adapter]
 
 
    [ch.qos.logback/logback-classic]
@@ -49,18 +51,24 @@
 
   :managed-dependencies
   [[farseer-handler :version]
+   [farseer-http :version]
+
+
    [farseer-client :version]
    [farseer-stub :version]
 
    [org.clojure/clojure "1.10.1"]
    [org.clojure/tools.logging "1.1.0"]
 
+
+   [ring/ring-jetty-adapter "1.7.1"]
+
    [ring/ring-mock "0.4.0"]
 
    [clj-http "3.12.0"]
    [cheshire "5.10.0"]
 
-   [ring/ring-jetty-adapter "1.7.1"]
+
    [ring/ring-json "0.5.0"]
 
    [ch.qos.logback/logback-classic "1.2.3"]
