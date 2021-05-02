@@ -7,9 +7,15 @@
 
   :parent-project
   {:path "../project.clj"
-   :inherit [:repositories :scm :deploy-repositories
-             :managed-dependencies :url :license
-             :plugins :test-selectors [:profiles :test :plugins]]}
+   :inherit [:deploy-repositories
+             :license
+             :managed-dependencies
+             :plugins
+             :repositories
+             :scm
+             :test-selectors
+             :url
+             [:profiles :dev]]}
 
   :profiles
   {:dev
@@ -17,4 +23,6 @@
     []}}
 
   :dependencies
-  [])
+  [[metosin/spec-tools]
+   [selmer]
+   [cheshire]])

@@ -1,7 +1,7 @@
 (ns farseer.client
   (:require
-   [farseer.config :as config]
-   [farseer.spec.rpc :as spec.rpc]
+   ;; [farseer.config :as config]
+   ;; [farseer.spec.rpc :as spec.rpc]
    [farseer.spec.client :as spec.client]
 
    [clj-http.client :as client]

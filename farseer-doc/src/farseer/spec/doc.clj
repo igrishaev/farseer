@@ -1,4 +1,4 @@
-(ns farseer.spec.rtfm
+(ns farseer.spec.doc
   (:require
    [farseer.spec.util :as util]
    [clojure.string :as str]

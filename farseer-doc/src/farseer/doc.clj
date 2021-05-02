@@ -1,7 +1,7 @@
 (ns farseer.doc
   (:require
    [farseer.config :as config]
-   [farseer.spec.rtfm :as spec.rtfm]
+   [farseer.spec.doc :as spec.doc]
 
    [spec-tools.json-schema :as js]
    [selmer.parser :as parser]
