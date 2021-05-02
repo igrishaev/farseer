@@ -15,8 +15,7 @@
              :scm
              :test-selectors
              :url
-             [:profiles :dev]
-             [:profiles :test :plugins]]}
+             [:profiles :dev]]}
 
   :profiles
   {:dev

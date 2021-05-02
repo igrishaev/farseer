@@ -14,8 +14,8 @@
   :sub ["farseer-handler"
         "farseer-http"
         "farseer-jetty"
-
         "farseer-stub"
+
         "farseer-client"
         "farseer-doc"]
 
@@ -25,8 +25,8 @@
    ;; [farseer-handler]
    ;; [farseer-http]
    ;; [farseer-jetty]
-
    ;; [farseer-stub]
+
    ;; [farseer-client]
    ;; [farseer-doc]
 
@@ -52,10 +52,12 @@
   :managed-dependencies
   [[farseer-handler :version]
    [farseer-http :version]
-
+   [farseer-jetty :version]
+   [farseer-stub :version]
 
    [farseer-client :version]
-   [farseer-stub :version]
+   [farseer-doc :version]
+
 
    [org.clojure/clojure "1.10.1"]
    [org.clojure/tools.logging "1.1.0"]

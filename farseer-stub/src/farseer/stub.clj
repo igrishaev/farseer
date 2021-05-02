@@ -1,6 +1,6 @@
 (ns farseer.stub
   (:require
-   [farseer.server.jetty :as jetty]
+   [farseer.jetty :as jetty]
    [farseer.spec.stub :as spec.stub]
    [farseer.error :as e]
 
