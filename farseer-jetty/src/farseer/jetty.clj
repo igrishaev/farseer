@@ -42,7 +42,6 @@
   (.stop ^Server server))
 
 
-;; TODO: Reflection warning, ring/adapter/jetty.clj:45:3 - call to org.eclipse.jetty.server.ServerConnector ctor can't be resolved.
 (defmacro with-server
   [[config & [context]] & body]
   `(let [server# (start-server ~config ~context)]

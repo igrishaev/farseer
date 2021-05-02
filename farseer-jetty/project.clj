@@ -14,13 +14,7 @@
              :repositories
              :scm
              :test-selectors
-             :url
-
-             ;; TODO:
-             ;; [:profiles :dev :global-vars]
-             ;; [:profiles :dev :jvm-opts]
-
-             ]}
+             :url]}
 
   :profiles
   {:dev
