@@ -1,11 +1,14 @@
 (defproject farseer-all "0.1.0-SNAPSHOT"
 
-  :description "JSON-RPC client and server with tools"
+  :description
+  "JSON-RPC client and server with tools"
 
-  :url "https://github.com/igrishaev/farseer"
+  :url
+  "https://github.com/igrishaev/farseer"
 
-  :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
-            :url "https://www.eclipse.org/legal/epl-2.0/"}
+  :license
+  {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
+   :url "https://www.eclipse.org/legal/epl-2.0/"}
 
   :plugins
   [[lein-sub "0.3.0"]
@@ -19,33 +22,12 @@
         "farseer-doc"]
 
   :dependencies
-  [
-
-   ;; [farseer-handler]
-   ;; [farseer-http]
-   ;; [farseer-jetty]
-   ;; [farseer-stub]
-   ;; [farseer-client]
-   ;; [farseer-doc]
-
-   ;; [org.clojure/clojure]
-
-
-   ;; [ring/ring-json]
-
-
-   [org.clojure/tools.logging]
-   [clj-http]
-   [cheshire]
-
-   [ring/ring-jetty-adapter]
-
-
-   [ch.qos.logback/logback-classic]
-   [com.stuartsierra/component]
-   [ring-basic-authentication]
-   [metosin/spec-tools]
-   [selmer]]
+  [[farseer-handler]
+   [farseer-http]
+   [farseer-jetty]
+   [farseer-stub]
+   [farseer-client]
+   [farseer-doc]]
 
   :managed-dependencies
   [[farseer-handler :version]
@@ -55,26 +37,17 @@
    [farseer-client :version]
    [farseer-doc :version]
 
-
+   [ch.qos.logback/logback-classic "1.2.3"]
+   [cheshire "5.10.0"]
+   [clj-http "3.12.0"]
+   [com.stuartsierra/component "1.0.0"]
+   [metosin/spec-tools "0.10.5"]
    [org.clojure/clojure "1.10.1"]
    [org.clojure/tools.logging "1.1.0"]
-
-
-   [ring/ring-jetty-adapter "1.7.1"]
-
-   [ring/ring-mock "0.4.0"]
-
-   [clj-http "3.12.0"]
-   [cheshire "5.10.0"]
-
-
-   [ring/ring-json "0.5.0"]
-
-   [ch.qos.logback/logback-classic "1.2.3"]
-
-   [com.stuartsierra/component "1.0.0"]
    [ring-basic-authentication "1.1.0"]
-   [metosin/spec-tools "0.10.5"]
+   [ring/ring-jetty-adapter "1.7.1"]
+   [ring/ring-json "0.5.0"]
+   [ring/ring-mock "0.4.0"]
    [selmer "1.12.34"]]
 
   :release-tasks
