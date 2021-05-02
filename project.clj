@@ -15,8 +15,8 @@
         "farseer-http"
         "farseer-jetty"
         "farseer-stub"
-
         "farseer-client"
+
         "farseer-doc"]
 
   :dependencies
@@ -26,8 +26,8 @@
    ;; [farseer-http]
    ;; [farseer-jetty]
    ;; [farseer-stub]
-
    ;; [farseer-client]
+
    ;; [farseer-doc]
 
    ;; [org.clojure/clojure]
@@ -54,8 +54,8 @@
    [farseer-http :version]
    [farseer-jetty :version]
    [farseer-stub :version]
-
    [farseer-client :version]
+
    [farseer-doc :version]
 
 
