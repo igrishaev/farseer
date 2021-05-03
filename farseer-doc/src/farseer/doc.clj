@@ -73,7 +73,7 @@
   (let [config
         (->> defaults
              (config/rebase config)
-             (s/assert ::spec.rtfm/config))
+             (s/assert ::spec.doc/config))
 
         {:doc/keys [title
                     description

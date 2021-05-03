@@ -23,6 +23,8 @@
     []}}
 
   :dependencies
-  [[metosin/spec-tools]
+  [[farseer-common]
+
+   [metosin/spec-tools]
    [selmer]
    [cheshire]])
