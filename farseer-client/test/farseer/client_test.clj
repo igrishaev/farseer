@@ -1,7 +1,7 @@
 (ns farseer.client-test
   (:require
    [farseer.client :as client]
-   [farseer.server.jetty :as jetty]
+   [farseer.jetty :as jetty]
 
    [com.stuartsierra.component :as component]
 

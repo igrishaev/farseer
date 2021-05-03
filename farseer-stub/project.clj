@@ -23,6 +23,7 @@
     [[ch.qos.logback/logback-classic]]}}
 
   :dependencies
-  [[farseer-jetty]
+  [[farseer-common]
+   [farseer-jetty]
 
    [org.clojure/tools.logging]])
