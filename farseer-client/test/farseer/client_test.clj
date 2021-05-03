@@ -62,7 +62,6 @@
            (drop-id result)))))
 
 
-
 (deftest test-client-notify
 
   (let [client (client/make-client config-client)

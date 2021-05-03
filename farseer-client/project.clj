@@ -14,20 +14,23 @@
              :repositories
              :scm
              :test-selectors
-             :url]}
+             :url
+             [:profiles :dev]]}
 
   :profiles
   {:dev
    {:resource-paths ["../dev-resources"]
     :dependencies
-    [[ch.qos.logback/logback-classic]
-     [farseer-jetty]
+    [[ch.qos.logback/logback-classic]]}
+
+   :test
+   {:dependencies
+    [[farseer-jetty]
      [com.stuartsierra/component]]}}
 
   :dependencies
-  [[org.clojure/tools.logging]
+  [[farseer-common]
 
-   [farseer-common]
-
+   [org.clojure/tools.logging]
    [clj-http]
    [cheshire]])
