@@ -14,15 +14,18 @@
              :repositories
              :scm
              :test-selectors
-             :url]}
+             :url
+             [:profiles :dev]]}
 
   :profiles
   {:dev
    {:resource-paths ["../dev-resources"]
     :dependencies
-    [[ch.qos.logback/logback-classic]
+    [[ch.qos.logback/logback-classic]]}
 
-     [com.stuartsierra/component]
+   :test
+   {:dependencies
+    [[com.stuartsierra/component]
      [clj-http]
      [ring-basic-authentication]]}}
 
