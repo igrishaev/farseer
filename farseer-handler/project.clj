@@ -24,4 +24,6 @@
     [[ch.qos.logback/logback-classic]]}}
 
   :dependencies
-  [[org.clojure/tools.logging]])
+  [[org.clojure/tools.logging]
+
+   [farseer-common]])

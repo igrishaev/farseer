@@ -14,7 +14,8 @@
   [[lein-sub "0.3.0"]
    [exoscale/lein-replace "0.1.1"]]
 
-  :sub ["farseer-handler"
+  :sub ["farseer-common"
+        "farseer-handler"
         "farseer-http"
         "farseer-jetty"
         "farseer-stub"
@@ -22,7 +23,8 @@
         "farseer-doc"]
 
   :dependencies
-  [[farseer-handler]
+  [[farseer-common]
+   [farseer-handler]
    [farseer-http]
    [farseer-jetty]
    [farseer-stub]
@@ -30,7 +32,8 @@
    [farseer-doc]]
 
   :managed-dependencies
-  [[farseer-handler :version]
+  [[farseer-common :version]
+   [farseer-handler :version]
    [farseer-http :version]
    [farseer-jetty :version]
    [farseer-stub :version]
