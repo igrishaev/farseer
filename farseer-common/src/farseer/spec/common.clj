@@ -1,4 +1,4 @@
-(ns farseer.spec.util
+(ns farseer.spec.common
   (:require
    [clojure.string :as str]
    [clojure.spec.alpha :as s]))

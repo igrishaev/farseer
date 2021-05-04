@@ -1,6 +1,6 @@
 (ns farseer.spec.doc
   (:require
-   [farseer.spec.util :as util]
+   [farseer.spec.common :as common]
    [clojure.string :as str]
    [clojure.spec.alpha :as s]))
 
@@ -22,8 +22,8 @@
                 :handler/spec-out]))
 
 
-(s/def :handler/spec-in  ::util/spec)
-(s/def :handler/spec-out ::util/spec)
+(s/def :handler/spec-in  ::common/spec)
+(s/def :handler/spec-out ::common/spec)
 
 
 (s/def :rpc/handlers
