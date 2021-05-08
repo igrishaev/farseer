@@ -1,4 +1,4 @@
-(defproject farseer-stub "0.1.0-SNAPSHOT"
+(defproject farseer-stub "0.1.0"
 
   :description
   "Local HTTP stub for RPC server"

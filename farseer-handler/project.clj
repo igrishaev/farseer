@@ -1,4 +1,4 @@
-(defproject farseer-handler "0.1.0-SNAPSHOT"
+(defproject farseer-handler "0.1.0"
 
   :description
   "The basic, transport-agnostic RPC handler"

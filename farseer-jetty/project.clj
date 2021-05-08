@@ -1,4 +1,4 @@
-(defproject farseer-jetty "0.1.0-SNAPSHOT"
+(defproject farseer-jetty "0.1.0"
 
   :description
   "Jetty server for HTTP RPC handler"

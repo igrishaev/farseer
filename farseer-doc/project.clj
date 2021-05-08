@@ -1,4 +1,4 @@
-(defproject farseer-doc "0.1.0-SNAPSHOT"
+(defproject farseer-doc "0.1.0"
 
   :description
   "Utilities to generate RPC documentation"

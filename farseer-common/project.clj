@@ -1,4 +1,4 @@
-(defproject farseer-common "0.1.0-SNAPSHOT"
+(defproject farseer-common "0.1.0"
 
   :description
   "Common parts of the project"

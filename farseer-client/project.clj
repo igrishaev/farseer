@@ -1,4 +1,4 @@
-(defproject farseer-client "0.1.0-SNAPSHOT"
+(defproject farseer-client "0.1.0"
 
   :description
   "HTTP client for RPC server"

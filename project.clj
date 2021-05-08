@@ -1,4 +1,4 @@
-(defproject farseer-all "0.1.0-SNAPSHOT"
+(defproject farseer-all "0.1.0"
 
   :description
   "JSON-RPC client and server with tools"
