@@ -1,4 +1,4 @@
-(defproject farseer-doc "0.1.0"
+(defproject com.github.igrishaev/farseer-doc "0.1.0"
 
   :description
   "Utilities to generate RPC documentation"
@@ -23,7 +23,7 @@
     []}}
 
   :dependencies
-  [[farseer-common]
+  [[com.github.igrishaev/farseer-common]
 
    [metosin/spec-tools]
    [selmer]

@@ -1,4 +1,4 @@
-(defproject farseer-all "0.1.0"
+(defproject com.github.igrishaev/farseer-all "0.1.0"
 
   :description
   "JSON-RPC client and server with tools"
@@ -8,7 +8,6 @@
 
   :deploy-repositories
   {"releases" {:url "https://repo.clojars.org" :creds :gpg}}
-
 
   :license
   {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
@@ -27,22 +26,22 @@
         "farseer-doc"]
 
   :dependencies
-  [[farseer-common]
-   [farseer-handler]
-   [farseer-http]
-   [farseer-jetty]
-   [farseer-stub]
-   [farseer-client]
-   [farseer-doc]]
+  [[com.github.igrishaev/farseer-common]
+   [com.github.igrishaev/farseer-handler]
+   [com.github.igrishaev/farseer-http]
+   [com.github.igrishaev/farseer-jetty]
+   [com.github.igrishaev/farseer-stub]
+   [com.github.igrishaev/farseer-client]
+   [com.github.igrishaev/farseer-doc]]
 
   :managed-dependencies
-  [[farseer-common :version]
-   [farseer-handler :version]
-   [farseer-http :version]
-   [farseer-jetty :version]
-   [farseer-stub :version]
-   [farseer-client :version]
-   [farseer-doc :version]
+  [[com.github.igrishaev/farseer-common :version]
+   [com.github.igrishaev/farseer-handler :version]
+   [com.github.igrishaev/farseer-http :version]
+   [com.github.igrishaev/farseer-jetty :version]
+   [com.github.igrishaev/farseer-stub :version]
+   [com.github.igrishaev/farseer-client :version]
+   [com.github.igrishaev/farseer-doc :version]
 
    [ch.qos.logback/logback-classic "1.2.3"]
    [cheshire "5.10.0"]

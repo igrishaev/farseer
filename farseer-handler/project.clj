@@ -1,4 +1,4 @@
-(defproject farseer-handler "0.1.0"
+(defproject com.github.igrishaev/farseer-handler "0.1.0"
 
   :description
   "The basic, transport-agnostic RPC handler"
@@ -26,4 +26,4 @@
   :dependencies
   [[org.clojure/tools.logging]
 
-   [farseer-common]])
+   [com.github.igrishaev/farseer-common]])

@@ -1,4 +1,4 @@
-(defproject farseer-client "0.1.0"
+(defproject com.github.igrishaev/farseer-client "0.1.0"
 
   :description
   "HTTP client for RPC server"
@@ -25,11 +25,11 @@
 
    :test
    {:dependencies
-    [[farseer-jetty]
+    [[com.github.igrishaev/farseer-jetty]
      [com.stuartsierra/component]]}}
 
   :dependencies
-  [[farseer-common]
+  [[com.github.igrishaev/farseer-common]
 
    [org.clojure/tools.logging]
    [clj-http]

@@ -1,4 +1,4 @@
-(defproject farseer-http "0.1.0"
+(defproject com.github.igrishaev/farseer-http "0.1.0"
 
   :description
   "HTTP Ring handler for an RPC hadnler"
@@ -24,7 +24,7 @@
     [[ch.qos.logback/logback-classic]]}}
 
   :dependencies
-  [[farseer-handler]
+  [[com.github.igrishaev/farseer-handler]
 
    [ring/ring-mock]
    [ring/ring-json]])

@@ -1,4 +1,4 @@
-(defproject farseer-stub "0.1.0"
+(defproject com.github.igrishaev/farseer-stub "0.1.0"
 
   :description
   "Local HTTP stub for RPC server"
@@ -23,7 +23,7 @@
     [[ch.qos.logback/logback-classic]]}}
 
   :dependencies
-  [[farseer-common]
-   [farseer-jetty]
+  [[com.github.igrishaev/farseer-common]
+   [com.github.igrishaev/farseer-jetty]
 
    [org.clojure/tools.logging]])

@@ -1,4 +1,4 @@
-(defproject farseer-jetty "0.1.0"
+(defproject com.github.igrishaev/farseer-jetty "0.1.0"
 
   :description
   "Jetty server for HTTP RPC handler"
@@ -30,6 +30,6 @@
      [ring-basic-authentication]]}}
 
   :dependencies
-  [[farseer-http]
+  [[com.github.igrishaev/farseer-http]
 
    [ring/ring-jetty-adapter]])
