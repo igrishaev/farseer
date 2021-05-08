@@ -1,7 +1,11 @@
+
 # Farseer
 
-A set of modules for JSON RPC. Includes a transport-independent handler, Ring
-HTTP handler, Jetty server, HTTP client, local stub, documentation, and more.
+[JSON-RPC]: https://en.wikipedia.org/wiki/JSON-RPC
+
+A set of modules for [JSON RPC][JSON-RPC]. Includes a transport-independent
+handler, Ring HTTP handler, Jetty server, HTTP client, local stub,
+documentation, and more.
 
 ## Table of Contents
 
@@ -21,7 +25,7 @@ HTTP handler, Jetty server, HTTP client, local stub, documentation, and more.
 
 <!-- tocstop -->
 
-## Why JSON RPC?
+## What and Why is JSON RPC?
 
 ## The Structure of this Project
 
