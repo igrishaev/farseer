@@ -1,4 +1,4 @@
-(defproject com.github.igrishaev/farseer-all "0.1.0"
+(defproject com.github.igrishaev/farseer-all "0.1.1-SNAPSHOT"
 
   :description
   "JSON-RPC client and server with tools"
@@ -57,10 +57,10 @@
    [selmer "1.12.34"]]
 
   :release-tasks
-  [["vcs" "assert-committed"]
+  [;; ["vcs" "assert-committed"]
    ["sub" "change" "version" "leiningen.release/bump-version" "release"]
    ["change" "version" "leiningen.release/bump-version" "release"]
-   ["vcs" "commit"]
+   ;; ["vcs" "commit"]
    ["vcs" "tag" "--no-sign"]
    ["sub" "with-profile" "uberjar" "install"]
    ["sub" "with-profile" "uberjar" "deploy"]
