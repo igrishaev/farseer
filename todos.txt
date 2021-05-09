@@ -6,6 +6,8 @@ check config (resolve fns, get specs)
 json body -- parameter
 split doc on sections?
 
+tests for handler
+
 ;; review sequential?
 
 ;; make name

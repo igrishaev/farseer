@@ -109,7 +109,7 @@ additional packages that bring HTTP transport for the handler you built.
 First, add it to the project:
 
 ```clojure
-[com.github.igrishaev/farseer-handler]
+[com.github.igrishaev/farseer-handler ...]
 ```
 
 Here is the minimal usage example. Prepare a namespace:
@@ -220,6 +220,8 @@ specify a non-existing one, you'll get a negative response:
 ### Notifications
 
 ### Specs
+
+### Request Format
 
 ### Batch Requests
 
