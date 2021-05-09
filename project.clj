@@ -80,7 +80,8 @@
    {:dependencies [[org.clojure/clojure]]}
 
    :dev
-   {:global-vars {*assert* true
+   {:source-paths ["dev"]
+    :global-vars {*assert* true
                   *warn-on-reflection* true}
     :jvm-opts ["-Dclojure.spec.compile-asserts=true"
                "-Dclojure.spec.check-asserts=true"]}

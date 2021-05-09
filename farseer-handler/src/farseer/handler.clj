@@ -186,7 +186,7 @@
           (> batch-size batch-max-size))]
 
     (if exeeded?
-      (e/invalid-params
+      (e/invalid-params!
        {:rpc/message "Batch size is too large"})
       this)))
 
@@ -226,7 +226,7 @@
 
     (if explain
 
-      (e/invalid-params
+      (e/invalid-params!
        {:rpc/data {:explain explain}})
 
       (assoc this
@@ -241,7 +241,7 @@
 
     (if (and batch? (not batch-allowed?))
 
-      (e/invalid-params
+      (e/invalid-params!
        {:rpc/message "Batch is not allowed"})
 
       this)))
