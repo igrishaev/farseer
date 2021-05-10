@@ -20,11 +20,15 @@ documentation, and more.
     + [Output Spec](#output-spec)
     + [In Production](#in-production)
   * [More on Context](#more-on-context)
-  * [Request Format](#request-format)
+    + [Static Context](#static-context)
+    + [Dynamic Context](#dynamic-context)
+  * [Request & Response Formats](#request--response-formats)
+    + [Request](#request)
+    + [Response](#response)
   * [Notifications](#notifications)
   * [Batch Requests](#batch-requests)
-  * [Configuration](#configuration)
   * [Errors & Exceptions](#errors--exceptions)
+  * [Configuration](#configuration)
 - [Ring HTTP Handler](#ring-http-handler)
 - [Jetty Server](#jetty-server)
 - [HTTP Stub](#http-stub)
@@ -503,20 +507,53 @@ it like this:
          {:db read-only-db})
 ~~~
 
+### Request & Response Formats
+
+#### Request
+
+An RPC request is a map of the followint fields:
+
+- `:id`: either a number or a string value representing this request. The handler
+  must return the same id in response unless it was a notification (see below).
+
+- `:method`: either a string or a keyword (preferred) that specify the RPC
+  method. If the method was a string, it gets coerced to the keyword anyway. We
+  recommend using the full qualified keywords with namespaces. The namespaces
+  help to group methods by semantic.
+
+- `:params`: either a map of [`keyword?`, `any?`] pairs, or a vector of `any?`
+  values (`sequential?` if more precisely). This field is optional as not all
+  the methods require arguments.
+
+- `:jsonrpc`: a string with exact value `"2.0"`, the required one.
+
+Examples:
+
+```clojure
+;; all the fields
+{:id 1
+ :method :math/sum
+ :params [1 2]
+ :jsonrpc "2.0"}
+
+;; no params
+{:id 2
+ :method :app/version
+ :jsonrpc "2.0"}
+
+;; no id (notification)
+{:method :user/delete-by-id
+ :params {:id 3}
+ :jsonrpc "2.0"}
+```
+
+The RPC request might be of a batch form then it's a vector of such
+maps. They're useful to perform multiple actions per one call. See the "Batch
+Requests" section below.
+
+#### Response
 
 
-
-
-
-
-
-
-
-
-
-
-
-### Request Format
 
 ### Notifications
 
