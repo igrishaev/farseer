@@ -366,15 +366,55 @@ tests to save time in production.
 
 ### More on Context
 
+[component]: https://github.com/stuartsierra/component
+[integrant]: https://github.com/weavejester/integrant
+
+OK, summing numbers is good for tuturial but makes no sense in real
+projects. Because there, we're moslty intreseted in IO and database
+access. Until now, it wasn't clear how a function can reach Postgres or Kafka
+clients especially if the project relies on system (e.g. [Component][component]
+or [Integrant][integrant]).
+
+In OOP languages, the environment for the RPC method usualy comes from the
+`this` parameter. It's an instance of some `RPCHadler` class that has fields for
+the database connection, message queue client and so on. In Clojure, we act
+almost like this, but instead of `this` object, we use context.
+
+A context is a map that carries the data needed by the method handler in
+runtime. This is the first argument of a function from the `:handler/function`
+key. By default, the context carries the current id and method of the RPC
+call. If you print the first argument of the function, you'll see:
+
+```clojure
+(defn rpc-sum
+  [context {:keys [a b]}]
+  (println context)
+  (+ a b))
+
+#:rpc{:id 1, :method :math/sum}
+```
+
+Both fields are prefixed with the `:rpc/` namespace to prevent the keys from
+clashing, e.g. `:id` for the RPC call and `:id` for the current user. Instead,
+the framework passes the `:rpc/id` field, and you should pass `:user/id` one.
+
+There are two ways to pass the context.
+
+
+The context maps are always merged, so in your function, you get a map that
+carries all the data at once (unless you overwrite keys with the same names).
+
+
+
 ### Request Format
 
 ### Notifications
 
 ### Batch Requests
 
-### Configuration
-
 ### Errors & Exceptions
+
+### Configuration
 
 ## Ring HTTP Handler
 

@@ -103,5 +103,12 @@
           :jsonrpc "2.0"})
 
 
+
+(defn rpc-sum
+  [context {:keys [a b]}]
+  (println context)
+  (+ a b))
+
+
 (s/def :math/sum.out
   string?)
