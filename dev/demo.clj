@@ -115,13 +115,10 @@
 
 
 
+#_
 (defn get-user-by-id
   [{:keys [db]}
    {:keys [user-id]}]
-
-  {:foo 42}
-
-  #_
   (jdbc/get-by-id db :users user-id))
 
 
@@ -134,6 +131,7 @@
   (s/nilable map?))
 
 
+#_
 (def config
   {:rpc/handlers
    {:user/get-by-id
@@ -141,13 +139,43 @@
      :handler/spec-in :user/user-by-id.in
      :handler/spec-out :user/user-by-id.out}}})
 
-
+#_
 (def handler
   (make-handler config))
 
-
+#_
 (handler {:id 1
           :method :user/get-by-id
           :params {:id 5}
           :jsonrpc "2.0"}
          {:db hikari-cp-pool})
+
+
+#_
+(def handler
+  (make-handler
+   config
+   {:db (open-db-connection {... ...})}))
+
+
+(defn rpc-sum
+  [context [a b]]
+  (println context)
+  (+ a b))
+
+(def config
+  {:rpc/handlers
+   {:math/sum
+    {:handler/function #'rpc-sum}}})
+
+(def handler
+  (make-handler config {:foo 1}))
+
+
+#_
+(handler {:id 1
+          :method :math/sum
+          :params [1 2]
+          :jsonrpc "2.0"}
+         {:foo 2}
+         )

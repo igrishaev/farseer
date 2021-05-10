@@ -398,17 +398,27 @@ Both fields are prefixed with the `:rpc/` namespace to prevent the keys from
 clashing, e.g. `:id` for the RPC call and `:id` for the current user. Instead,
 the framework passes the `:rpc/id` field, and you should pass `:user/id` one.
 
-The function made by the `(make-handler config)` call takes either one or two
-arguments. In the first case (one argument) it's just an RPC request. In the
-second case (two arguments), these are the RPC request and the context. The
-context carries some data required for the RPC function.
+Actually, there are two ways of passing context: a static and dynamic ones.
 
-The example below shows how to get a user from the database. Without the
-context, the function should be closured over the `db` variable, or the `db`
-must be a global entity, which leads to fragile design of the application. But
-as far as the `db` can be passed as an argument, we're fine.
+#### Static Context
 
-First, declare the function and specs:
+When you call the `make-handler` function to build an RPC handler, the second
+argument might be a context map. This map will be available in all the RPC
+functions. For example:
+
+~~~clojure
+(def handler
+  (make-handler
+   config
+   {:db (open-db-connection {...})
+    :version (get-app-version)}))
+~~~
+
+We assume the `open-db-connection` returns a connection pool, which is available
+to all the RPC functions as the `:db` field of the context. The `:version` field
+is the application version that is fetched from the text file.
+
+Now, if we had an RPC method that fetches a user by id, it could look like this:
 
 ~~~clojure
 (defn get-user-by-id
@@ -436,13 +446,29 @@ The config:
      :handler/spec-out :user/user-by-id.out}}})
 ~~~
 
-Now imagine we've built a JDBC pool named `hikari-cp-pool`. That's how we pass
-it to the handler:
+The call:
 
 ~~~clojure
-(def handler
-  (make-handler config))
+(handler {:id 1
+          :method :user/get-by-id
+          :params {:id 5}
+          :jsonrpc "2.0"})
 
+{:id 1, :jsonrpc "2.0", :result {:id 5 :name "Test"}}
+~~~
+
+#### Dynamic Context
+
+Use dynamic context when to pass a value that is only needed for the current RPC
+request. In that case, pass the context map as the second argument to the
+function made by the `make-handler`. The example with the dabase would look like
+this:
+
+~~~clojure
+;; no static context
+(def handler (make-handler config))
+
+;; dynamoc context
 (handler {:id 1
           :method :user/get-by-id
           :params {:id 5}
@@ -450,12 +476,43 @@ it to the handler:
          {:db hikari-cp-pool})
 ~~~
 
+Of course, you can use both ways to pass the context. Most likely the database
+is needed by all the RPC functions, so its place in the global context. Some
+minor fields might be passes on demand for certain calls:
+
+~~~clojure
+(def handler
+  (make-handler config {:db (make-db ...)}))
+
+(handler {:id 1 :method ...} {:version "0.2.1"})
+~~~
+
+The context maps are always merged, so from the function's point of view, they
+act the same.
+
+The local context map gets merged into the global one. It gives you an
+opportunity to override the default values from the context. Let's say, if the
+method `:user/get-by-id` needs a special (read-only) database, we can override
+it like this:
+
+~~~clojure
+(def handler
+  (make-handler config {:db (make-db ...)}))
+
+(handler {:id 1 :method :user/get-by-id ...}
+         {:db read-only-db})
+~~~
 
 
 
 
-The context maps are always merged, so in your function, you get a map that
-carries all the data at once (unless you overwrite keys with the same names).
+
+
+
+
+
+
+
 
 
 
