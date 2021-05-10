@@ -398,7 +398,60 @@ Both fields are prefixed with the `:rpc/` namespace to prevent the keys from
 clashing, e.g. `:id` for the RPC call and `:id` for the current user. Instead,
 the framework passes the `:rpc/id` field, and you should pass `:user/id` one.
 
-There are two ways to pass the context.
+The function made by the `(make-handler config)` call takes either one or two
+arguments. In the first case (one argument) it's just an RPC request. In the
+second case (two arguments), these are the RPC request and the context. The
+context carries some data required for the RPC function.
+
+The example below shows how to get a user from the database. Without the
+context, the function should be closured over the `db` variable, or the `db`
+must be a global entity, which leads to fragile design of the application. But
+as far as the `db` can be passed as an argument, we're fine.
+
+First, declare the function and specs:
+
+~~~clojure
+(defn get-user-by-id
+  [{:keys [db]}
+   {:keys [user-id]}]
+  (jdbc/get-by-id db :users user-id))
+
+(s/def :user/id pos-int?)
+
+(s/def :user/user-by-id.in
+  (s/keys :req-un [:user/id]))
+
+(s/def :user/user-by-id.out
+  (s/nilable map?))
+~~~
+
+The config:
+
+~~~clojure
+(def config
+  {:rpc/handlers
+   {:user/get-by-id
+    {:handler/function #'get-user-by-id
+     :handler/spec-in :user/user-by-id.in
+     :handler/spec-out :user/user-by-id.out}}})
+~~~
+
+Now imagine we've built a JDBC pool named `hikari-cp-pool`. That's how we pass
+it to the handler:
+
+~~~clojure
+(def handler
+  (make-handler config))
+
+(handler {:id 1
+          :method :user/get-by-id
+          :params {:id 5}
+          :jsonrpc "2.0"}
+         {:db hikari-cp-pool})
+~~~
+
+
+
 
 
 The context maps are always merged, so in your function, you get a map that

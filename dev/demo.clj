@@ -112,3 +112,42 @@
 
 (s/def :math/sum.out
   string?)
+
+
+
+(defn get-user-by-id
+  [{:keys [db]}
+   {:keys [user-id]}]
+
+  {:foo 42}
+
+  #_
+  (jdbc/get-by-id db :users user-id))
+
+
+(s/def :user/id pos-int?)
+
+(s/def :user/user-by-id.in
+  (s/keys :req-un [:user/id]))
+
+(s/def :user/user-by-id.out
+  (s/nilable map?))
+
+
+(def config
+  {:rpc/handlers
+   {:user/get-by-id
+    {:handler/function #'get-user-by-id
+     :handler/spec-in :user/user-by-id.in
+     :handler/spec-out :user/user-by-id.out}}})
+
+
+(def handler
+  (make-handler config))
+
+
+(handler {:id 1
+          :method :user/get-by-id
+          :params {:id 5}
+          :jsonrpc "2.0"}
+         {:db hikari-cp-pool})
