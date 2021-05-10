@@ -81,6 +81,7 @@
 
    :dev
    {:source-paths ["dev"]
+    :dependencies [[ch.qos.logback/logback-classic]]
     :global-vars {*assert* true
                   *warn-on-reflection* true}
     :jvm-opts ["-Dclojure.spec.compile-asserts=true"
