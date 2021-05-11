@@ -25,9 +25,13 @@ documentation, and more.
   * [Request & Response Formats](#request--response-formats)
     + [Request](#request)
     + [Response](#response)
+    + [Error Codes](#error-codes)
   * [Notifications](#notifications)
   * [Batch Requests](#batch-requests)
   * [Errors & Exceptions](#errors--exceptions)
+    + [Runtime (Unexpected) Errors](#runtime-unexpected-errors)
+    + [Expected Errors](#expected-errors)
+    + [Raising Exceptions](#raising-exceptions)
   * [Configuration](#configuration)
 - [Ring HTTP Handler](#ring-http-handler)
 - [Jetty Server](#jetty-server)
@@ -547,19 +551,158 @@ Examples:
  :jsonrpc "2.0"}
 ```
 
-The RPC request might be of a batch form then it's a vector of such
-maps. They're useful to perform multiple actions per one call. See the "Batch
-Requests" section below.
+The RPC request might be of a batch form then it's a vector of such maps. Batch
+is useful to perform multiple actions per one call. See the "Batch Requests"
+section below.
 
 #### Response
 
-
+#### Error Codes
 
 ### Notifications
 
 ### Batch Requests
 
 ### Errors & Exceptions
+
+#### Runtime (Unexpected) Errors
+
+The RPC handler wraps the whole logic into `try/catch` form with the `Throwable`
+class. It means you'll get a negative response even if something weird happens
+inside it. Here is an example of unsafe division what might lead to exception:
+
+~~~clojure
+(defn rpc-div
+  [_ [a b]]
+  (/ a b))
+
+(def config
+  {:rpc/handlers
+   {:math/div
+    {:handler/function #'rpc-div}}})
+
+(def handler
+  (make-handler config))
+
+(handler {:id 1
+          :method :math/div
+          :params [1 0]
+          :jsonrpc "2.0"})
+
+{:id 1
+ :jsonrpc "2.0"
+ :error {:code -32603
+         :message "Internal error"
+         :data {:method :math/div}}}
+~~~
+
+All the unexpected exceptions end up with the "Internal error" response with the
+code -32603. In the console, you'll see the the logged exception:
+
+```
+10:19:35.948 ERROR farseer.handler - Divide by zero, id: 1, method: :math/div, code: -32603, message: Internal error
+java.lang.ArithmeticException: Divide by zero
+	at clojure.lang.Numbers.divide(Numbers.java:188)
+	at demo$rpc_div.invokeStatic(form-init9886809666544152192.clj:190)
+	at demo$rpc_div.invoke(form-init9886809666544152192.clj:188)
+    ...
+```
+
+#### Expected Errors
+
+In the following cases, we excpect to get a negative response:
+
+- JSON parse error:
+
+```clojure
+
+```
+
+- RPC Method not found:
+
+```clojure
+
+```
+
+- Wrong input parameters:
+
+```clojure
+
+```
+
+```clojure
+
+```
+
+- Internal error:
+
+```clojure
+
+```
+
+#### Raising Exceptions
+
+The namespace `farseer.error` provides several functions for errors. Use them to
+throw exceptions to get an appropriate RPC response.
+
+Then RPC handler catches an exception, it gets the data using the `ex-data`
+function. Then it looks for some special fields to componse the
+response. Namely, these fields are:
+
+- `:rpc/code`: a number representing the error. When specified, it becomes the
+  `code` field of the error reponse.
+
+- `:rpc/message`: a string explaining the error. Becomes the `message` field of
+  the error response.
+
+- `:rpc/data`: a map with arbitrary data sent to the client. Becomes the `data`
+  field of the error response.
+
+- `:log/level`: a keyword meaning the logging level of this error. Valid values
+  are the those that the functions from `clojure.tools.logging` package accept,
+  e.g. `:debug`, `:info`, `:warn`, `:error`.
+
+- `:log/stacktrace?`: boolean, whether to log the entire stack trace or the
+  message only. Useful for "methdod not found" or "wrong input" cases because
+  there is no need for the full stack trace in such cases.
+
+The data fetched from the exception instance gets merged with the default error
+map declared in the `internal-error` variable:
+
+```clojure
+(def internal-error
+  {:log/level       :error
+   :log/stacktrace? true
+   :rpc/code        -32603
+   :rpc/message     "Internal error"})
+```
+
+Thus, if you didn't specify some of the fields, they come from this map.
+
+There are some shortcut functions to simplify raising exceptions, namely:
+
+- `parse-error!`
+- `invalid-request!`
+- `not-found!`
+- `invalid-params!`
+- `internal-error!`
+- `auth-error!`
+
+For all of them, the signature is `[& [data e]]` meaning that you can call the
+function even without arguments. Each function has its own default `data` map
+that gets merged to the `data` you passed. For example, these are default values
+for the `invalid-params!` function:
+
+```clojure
+(def invalid-params
+  {:log/level       :info
+   :log/stacktrace? false
+   :rpc/code        -32602
+   :rpc/message     "Invalid params"})
+```
+
+The logging level is `:info` as this is expected behaviour plus we don't log the
+whole stack trace for the same reason.
 
 ### Configuration
 

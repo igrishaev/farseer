@@ -75,3 +75,8 @@
 (defn internal-error!
   [& [data e]]
   (error! (merge internal-error data) e))
+
+
+(defn auth-error!
+  [& [data e]]
+  (error! (merge auth-error data) e))

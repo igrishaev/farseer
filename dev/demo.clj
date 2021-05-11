@@ -179,3 +179,28 @@
           :jsonrpc "2.0"}
          {:foo 2}
          )
+
+
+
+;;;;;;; --------------
+
+
+(defn rpc-div
+  [_ [a b]]
+  (/ a b))
+
+(def config
+  {:rpc/handlers
+   {:math/div
+    {:handler/function #'rpc-div}}})
+
+(def handler
+  (make-handler config))
+
+
+(handler {:id 1
+          :method :math/div
+          :params [1 0]
+          :jsonrpc "2.0"})
+
+{:error {:code -32603, :message "Internal error", :data {:method :math/div}}, :id 1, :jsonrpc "2.0"}
