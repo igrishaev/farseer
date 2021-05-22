@@ -1,6 +1,10 @@
 (ns demo
   (:require
+   [farseer.http :as http]
    [farseer.handler :refer [make-handler]]
+
+   [cheshire.core :as json]
+
    [clojure.spec.alpha :as s]))
 
 
@@ -278,20 +282,103 @@
 {:error {:code -32602, :message "Batch size is too large"}}
 
 
+(def config
+  {:rpc/handlers
+   {:math/sum
+    {:handler/function #'rpc-sum
+     :handler/spec-in :math/sum.in
+     :handler/spec-out :math/sum.out}}})
+
 (def app
   (http/make-app config))
+
+(def rpc
+  {:id 1
+   :jsonrpc "2.0"
+   :method :math/sum
+   :params [1 2]})
+
+(def request
+  {:request-method :post
+   :uri "/"
+   :headers {"content-type" "application/json"}
+   :body (-> rpc json/generate-string .getBytes)})
+
+(def response
+  (-> (app request)
+      (update :body json/parse-string true)))
+
 
 
 (def rpc
   {:id 1
    :jsonrpc "2.0"
-   :method :test/foobar
-   :params [1 2 3]})
+   :method :math/missing
+   :params [nil "a"]})
 
 (def request
   {:request-method :post
    :uri "/"
-   :headers {:content-type "application/json"}
-   :body (json/generate-string rpc)})
+   :headers {"content-type" "application/json"}
+   :body (-> rpc json/generate-string .getBytes)})
 
-(app request)
+(def response
+  (-> (app request)
+      (update :body json/parse-string true)))
+
+{:status 200,
+ :body
+ {:error
+  {:code -32601, :message "Method not found", :data {:method "math/missing"}},
+  :id 1,
+  :jsonrpc "2.0"},
+ :headers {"Content-Type" "application/json; charset=utf-8"}}
+
+
+
+(def rpc
+  [{:id 1
+    :jsonrpc "2.0"
+    :method :math/sum
+    :params [1 2]}
+   {:id 2
+    :jsonrpc "2.0"
+    :method :math/sum
+    :params [3 4]}])
+
+(def request
+  {:request-method :post
+   :uri "/"
+   :headers {"content-type" "application/json"}
+   :body (-> rpc json/generate-string .getBytes)})
+
+(def response
+  (-> (app request)
+      (update :body json/parse-string true)))
+
+
+#_
+{:status 200,
+ :body ({:id 1, :jsonrpc "2.0", :result 3} {:id 2, :jsonrpc "2.0", :result 7}),
+ :headers {"Content-Type" "application/json; charset=utf-8"}}
+
+
+;; auth
+
+(defn auth? [user pass]
+  (and (= "foo" user)
+       (= "bar" pass)))
+
+(def middleware-stack
+  [[wrap-basic-authentication auth? "Please auth" http/non-auth-response]
+   [http/wrap-json-body http/json-body-options]
+   http/wrap-json-resp])
+
+
+(def config
+  {:http/middleware middleware-stack
+   :rpc/handlers
+   {:math/sum
+    {:handler/function #'rpc-sum
+     :handler/spec-in :math/sum.in
+     :handler/spec-out :math/sum.out}}})

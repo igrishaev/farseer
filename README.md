@@ -694,6 +694,21 @@ The result:
   :jsonrpc "2.0"})
 ~~~
 
+You can mix ordinary RPC tasks with notifications in a batch. There will be no
+response maps for notifications in the result vector:
+
+~~~clojure
+(handler [{:id 1
+           :method :math/sum
+           :params [1 2]
+           :jsonrpc "2.0"}
+          {:method :math/sum ;; no ID
+           :params [3 4]
+           :jsonrpc "2.0"}])
+
+[{:id 1 :jsonrpc "2.0" :result 3}]
+~~~
+
 #### Note on Parallelism
 
 By default, Farseer uses the standard `pmap` function. It executes the tasks in
@@ -919,7 +934,156 @@ Add the package:
 The package reuses the same config we wrote above. All the HTTP-related fields
 have default values, so you can just pass the config to the `make-app` function:
 
-(let [app (http/make-app config)])
+~~~clojure
+(def app
+  (http/make-app config))
+~~~
+
+Now let's componse the HTTP request to the app:
+
+~~~clojure
+(def rpc
+  {:id 1
+   :jsonrpc "2.0"
+   :method :math/sum
+   :params [1 2]})
+
+(def request
+  {:request-method :post
+   :uri "/"
+   :headers {"content-type" "application/json"}
+   :body (-> rpc json/generate-string .getBytes)})
+~~~
+
+and call it like an HTTP server:
+
+~~~clojure
+(def response
+  (-> (app request)
+      (update :body json/parse-string true)))
+
+{:status 200
+ :body {:id 1 :jsonrpc "2.0" :result 3}
+ :headers {"Content-Type" "application/json; charset=utf-8"}}
+~~~
+
+#### Negative Responses
+
+A quick example of how would the hanlder behaive in case of an error:
+
+~~~clojure
+(def rpc
+  {:id 1
+   :jsonrpc "2.0"
+   :method :math/missing ;; wrong method
+   :params [nil "a"]})
+
+(def request
+  {:request-method :post
+   :uri "/"
+   :headers {"content-type" "application/json"}
+   :body (-> rpc json/generate-string .getBytes)})
+
+(def response
+  (-> (app request)
+      (update :body json/parse-string true)))
+
+{:status 200
+ :body
+ {:error
+  {:code -32601 :message "Method not found" :data {:method "math/missing"}}
+  :id 1
+  :jsonrpc "2.0"}
+ :headers {"Content-Type" "application/json; charset=utf-8"}}
+~~~
+
+Pay attention that the server **always** responds with the status code 200. This
+is the main deference from the REST approach. In RPC, HTTP is nothing else than
+just a transport layer. Its purpose is only to deliver messages without
+interfering into the pipeline. It's up to you how to check if the RPC response
+was correct or not. However, the HTTP client package (see below) prides an
+option to raise an exception in case of error response.
+
+#### Batch Requests in HTTP
+
+If your configuration allows batch requests, you can send them via HTTP. For
+this, replace the `rpc` variable above with the vector of RPC maps. The result
+will be a vector of response maps.
+
+~~~clojure
+(def rpc
+  [{:id 1
+    :jsonrpc "2.0"
+    :method :math/sum
+    :params [1 2]}
+   {:id 2
+    :jsonrpc "2.0"
+    :method :math/sum
+    :params [3 4]}])
+
+(def request
+  ...)
+
+(def response
+  ...)
+
+{:status 200
+ :headers {"Content-Type" "application/json; charset=utf-8"}
+ :body ({:id 1 :jsonrpc "2.0" :result 3}
+        {:id 2 :jsonrpc "2.0" :result 7})}
+~~~
+
+Everything said above for batch requests also apply to HTTP as well.
+
+#### Configuration
+
+Here is a list of HTTP options the library support:
+
+- `:http/method` (default is `:post`) an HTTP method to listen. POST is the one
+  recommended by the RPC specification.
+
+- `:http/path` (default is `"/"`) URI path to listen. You may specify something
+  like `"/api"`, `"/rpc"` or similar.
+
+- `:http/health?` (default is `true`) whether or not the health endpoint is
+  available. When it is, `GET /health` or `GET /healthz` requests receive an
+  empty `200 OK` response. This is useful for monitoring your server.
+
+- `:http/middleware` (default is the `farseer.http/default-middleware` vector) a
+  list of HTTP middleware to apply to the HTTP handler. See the next section.
+
+#### Middleware & Authirization
+
+By default, the handler gets wrapped into a couple of middleware. These are the
+standard `wrap-json-body` and `wrap-json-response` from the
+`ring.middleware.json` package. The first one is set up such that passing an
+incorrect JSON payload will return a proper RPC response (pay attention to the
+status 200):
+
+~~~clojure
+(app {:request-method :post
+      :uri "/"
+      :headers {"content-type" "application/json"}
+      :body (.getBytes "1aaa-")})
+
+{:status 200,
+ :headers {"Content-Type" "application/json"},
+ :body "{\"jsonrpc\":\"2.0\",\"error\":{\"code\":-32700,\"message\":\"Invalid JSON was received by the server.\"}}"}
+~~~
+
+Note: we use the `wrap-json-body` middleware but not `wrap-json-params` to make
+it work with batch requests. The the payload is not a map, it cannot be merged
+to the `:params` field.
+
+By overring the `:http/middleware` field, you can add your own logic to the HTTP
+pipeline. Here is a quick example how you protect the handler with Basic Auth:
+
+Also, you can replace JSON middleware with the one that uses some other format
+like MessagePack, Transient or whatever.
+
+#### HTTP Context
+
+The HTTP handler adds the
 
 
 ## Jetty Server
