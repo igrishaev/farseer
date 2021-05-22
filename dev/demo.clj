@@ -276,3 +276,22 @@
          )
 
 {:error {:code -32602, :message "Batch size is too large"}}
+
+
+(def app
+  (http/make-app config))
+
+
+(def rpc
+  {:id 1
+   :jsonrpc "2.0"
+   :method :test/foobar
+   :params [1 2 3]})
+
+(def request
+  {:request-method :post
+   :uri "/"
+   :headers {:content-type "application/json"}
+   :body (json/generate-string rpc)})
+
+(app request)

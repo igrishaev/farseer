@@ -897,6 +897,31 @@ whole stack trace for the same reason.
 
 ## Ring HTTP Handler
 
+With this package you create an HTTP handler from your RPC configuration. The
+HTTP handler follows the official Ring protocol: it's a function that takes an
+HTTP request map and returns a response map. The handler uses JSON format for
+transport. It's already wrapped with Ring JSON middleware that decode and encode
+the request and response. You can pass other middleware stack to use something
+other that JSON, say MessagePack or EDN.
+
+Add the package:
+
+~~~clojure
+;; deps
+[com.github.igrishaev/farseer-http "..."]
+
+;; module
+(ns ...
+  (:require
+   [farseer.http :as http]))
+~~~
+
+The package reuses the same config we wrote above. All the HTTP-related fields
+have default values, so you can just pass the config to the `make-app` function:
+
+(let [app (http/make-app config)])
+
+
 ## Jetty Server
 
 ## HTTP Stub
