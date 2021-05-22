@@ -204,3 +204,75 @@
           :jsonrpc "2.0"})
 
 {:error {:code -32603, :message "Internal error", :data {:method :math/div}}, :id 1, :jsonrpc "2.0"}
+
+
+#_
+(handler [{:id 1
+           :method :math/sum
+           :params [1 2]
+           :jsonrpc "2.0"}
+          {:id 2
+           :method :math/sum
+           :params [3 4]
+           :jsonrpc "2.0"}
+          {:id 3
+           :method :math/sum
+           :params [5 6]
+           :jsonrpc "2.0"}
+
+          ])
+
+
+(def config
+  {:rpc/batch-allowed? false
+   :rpc/handlers
+   {:math/sum
+    {:handler/function #'rpc-sum
+     :handler/spec-in :math/sum.in
+     :handler/spec-out :math/sum.out}}})
+
+(def handler
+  (make-handler config))
+
+
+(handler [{:id 1
+           :method :math/sum
+           :params [1 2]
+           :jsonrpc "2.0"}
+          {:id 2
+           :method :math/sum
+           :params [3 4]
+           :jsonrpc "2.0"}])
+
+{:error {:code -32602, :message "Batch is not allowed"}}
+
+
+(def config
+  {:rpc/batch-allowed? true
+   :rpc/batch-max-size 2
+   :rpc/handlers
+   {:math/sum
+    {:handler/function #'rpc-sum
+     :handler/spec-in :math/sum.in
+     :handler/spec-out :math/sum.out}}})
+
+(def handler
+  (make-handler config))
+
+
+(handler [{:id 1
+           :method :math/sum
+           :params [1 2]
+           :jsonrpc "2.0"}
+          {:id 2
+           :method :math/sum
+           :params [3 4]
+           :jsonrpc "2.0"}
+          {:id 3
+          :method :math/sum
+          :params [5 6]
+          :jsonrpc "2.0"}]
+
+         )
+
+{:error {:code -32602, :message "Batch size is too large"}}

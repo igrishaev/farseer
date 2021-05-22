@@ -28,6 +28,8 @@ documentation, and more.
     + [Error Codes](#error-codes)
   * [Notifications](#notifications)
   * [Batch Requests](#batch-requests)
+    + [Note on Parallelism](#note-on-parallelism)
+    + [Configuring & Limiting Batch Requests](#configuring--limiting-batch-requests)
   * [Errors & Exceptions](#errors--exceptions)
     + [Runtime (Unexpected) Errors](#runtime-unexpected-errors)
     + [Expected Errors](#expected-errors)
@@ -557,11 +559,198 @@ section below.
 
 #### Response
 
+The response is map with the `:id` and `:jsonrpc` fields. The ID is the same you
+passed in the request so you can match the response to the request by ID. If
+the response was positive, its `:result` field carries the value that the RPC
+function returned:
+
+~~~clojure
+{:id 1, :jsonrpc "2.0", :result 3}
+~~~
+
+A negative response has no the `:result` fields but the `:error` one
+instead. The error node consists from the `:code` and `:message` fields which
+are the numeric code representing an error and a text message explaining it. In
+addition, there might be the `:data` fields which is an arbitrary map with some
+extra context. The library adds the `:method` field to the context
+automatically.
+
+~~~clojure
+{:id 1
+ :jsonrpc "2.0"
+ :error {:code -32603
+         :message "Internal error"
+         :data {:method :math/div}}}
+~~~
+
 #### Error Codes
+
+The library provides the following error codes and messages:
+
+| Code    | Message | Meaning
+| ------- | -------     |
+| -32700  | Parse error |
+| -32600  |                   |
+
 
 ### Notifications
 
+Sometimes, you're not interested in the response from an RPC servier. Say, if
+you delete a user, there is nothing for you to return. In this case, you send a
+notification rather than a requeset. Notifications are formed similar but have
+no the `:id` field. When replying to the notification, the server returns
+nothing. For example:
+
+~~~clojure
+(handler {:method :math/sum
+          :params [1 2]
+          :jsonrpc "2.0"})
+
+nil
+~~~
+
+Notifications are usefull to trigger some side effects on the server.
+
+Rememeber, if you pass a missing method or wrong input data (or any other error
+occurs), you'll get a negative response anyway:
+
+~~~clojure
+(handler {:method :math/sum
+          :params [1 "a"]
+          :jsonrpc "2.0"})
+
+{:error
+ {:code -32602
+  :message "Invalid params"}
+ :jsonrpc "2.0"}
+~~~
+
 ### Batch Requests
+
+Batch requests is the main feature of JSON RPC. It allows you to send multiple
+request maps in one call. The server executes the requests and returns a list of
+result maps. For example, you have a method `user/get-by-id` which takes a
+single ID and returns a map from the database. Now you got ten IDs. With
+ordinary REST API, you would run a cycle and performed ten HTTP calls. With RPC,
+you make a batch call.
+
+In our example, if we want to solve several math expressions at once, we do:
+
+~~~clojure
+(handler [{:id 1
+           :method :math/sum
+           :params [1 2]
+           :jsonrpc "2.0"}
+          {:id 2
+           :method :math/sum
+           :params [3 4]
+           :jsonrpc "2.0"}
+          {:id 3
+           :method :math/sum
+           :params [5 6]
+           :jsonrpc "2.0"}])
+~~~
+
+The result:
+
+~~~clojure
+({:id 1 :jsonrpc "2.0" :result 3}
+ {:id 2 :jsonrpc "2.0" :result 7}
+ {:id 3 :jsonrpc "2.0" :result 11})
+~~~
+
+If some of the tasks fail, they won't affect the others:
+
+~~~clojure
+(handler [{:id 1
+           :method :math/sum
+           :params [1 2]
+           :jsonrpc "2.0"}
+          {:id 2
+           :method :math/sum
+           :params [3 "aaa"]  ;; bad input
+           :jsonrpc "2.0"}
+          {:id 3
+           :method :math/missing ;; wrong method
+           :params [5 6]
+           :jsonrpc "2.0"}])
+~~~
+
+The result:
+
+~~~clojure
+({:id 1 :jsonrpc "2.0" :result 3}
+ {:error
+  {:code -32602
+   :message "Invalid params"
+   :data
+   {:explain ...
+    :method :math/sum}}
+  :id 2
+  :jsonrpc "2.0"}
+ {:error
+  {:code -32601 :message "Method not found" :data {:method :math/missing}}
+  :id 3
+  :jsonrpc "2.0"})
+~~~
+
+#### Note on Parallelism
+
+By default, Farseer uses the standard `pmap` function. It executes the tasks in
+semi-parallel way (see the comments for `pmap` on Clojuredocs). Maybe in the
+future, we could use a custom fixed thread executor for more control.
+
+#### Configuring & Limiting Batch Requests
+
+The following options help you to control batch requests:
+
+- `:rpc/batch-allowed?` (default is `true`): whether or not to allow batch
+  requests. If you set this to `false` and someone performs a batch call, they
+  will get an error like this:
+
+~~~clojure
+(def config
+  {:rpc/batch-allowed? false
+   :rpc/handlers ...})
+
+(def handler
+  (make-handler config))
+
+
+(handler [{:id 1
+           :method :math/sum
+           :params [1 2]
+           :jsonrpc "2.0"}
+          {:id 2
+           :method :math/sum
+           :params [3 4]
+           :jsonrpc "2.0"}])
+
+{:error {:code -32602, :message "Batch is not allowed"}}
+~~~
+
+- `:rpc/batch-max-size` (default is 25): the max number of tasks in a single
+  batch request. Sending more tasks in one request that is allowed leads to an
+  error:
+
+~~~clojure
+(def config
+  {:rpc/batch-allowed? true
+   :rpc/batch-max-size 2
+   :rpc/handlers ...})
+
+(def handler
+  (make-handler config))
+
+
+(handler [{...} {...} {...}])
+
+{:error {:code -32602, :message "Batch size is too large"}}
+~~~
+
+- `:rpc/batch-parallel?` (default is `true`): whether or not to prefer `pmap`
+  over the standard `mapv` for tasks processing. When `false`, the tasks get
+  executed just one by one.
 
 ### Errors & Exceptions
 
