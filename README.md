@@ -1083,10 +1083,84 @@ like MessagePack, Transient or whatever.
 
 #### HTTP Context
 
-The HTTP handler adds the
+The function `http/make-app` also takes an additional context map. This map will
+be merged with the data the RPC function accepts when being called.
 
+~~~clojure
+(def app
+  (make-app config {:app/version "0.0.1"}))
+
+(defn rpc-func [context params]
+  {:message (str "The version is " (:app/version context))})
+~~~
+
+The HTTP handler adds the `:http/request` item into the context. This is the
+instance of the request map that the handler accepts. Having the request, you
+can you handle some extra logic in you function. For example, some middleware
+can supplement the `:user` field to the request.
+
+~~~clojure
+(defn some-rpc [context params]
+  (let [{:http/keys [request]} context
+        {:keys [user]} request]
+    (when-not request
+      (throw ...))))
+~~~
 
 ## Jetty Server
+
+This sub-package allows you to run an RPC server using Jetty Ring adapter. Add
+it to the project:
+
+~~~clojure
+;; deps
+[com.github.igrishaev/farseer-jetty "..."]
+
+;; require
+(require '[farseer.jetty :as jetty])
+~~~
+
+All the config fields of Jetty have default values, so you can just pass a
+minimal config we've been using so far.
+
+~~~clojure
+(def server
+  (jetty/start-server config))
+
+;; #object[org.eclipse.jetty.server.Server 0x3e82fe49 "Server@3e82fe49{STARTED}[9.4.12.v20180830]"]
+~~~
+
+The default port is 8080. Now that your servier is being run, test it with cURL:
+
+~~~bash
+curl -X POST 'http://127.0.0.1:8080/' \
+  --data '{"id": 1, "jsonrpc": "2.0", "method": "math/sum", "params": [1, 2]}' \
+  -H 'content-type: application/json' | jq
+
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100   102    0    35  100    67   8750  16750 --:--:-- --:--:-- --:--:-- 34000
+{
+  "id": 1,
+  "jsonrpc": "2.0",
+  "result": 3
+}
+~~~
+
+Pay attention to the `content-type` header. Without it, the request payload won't
+be decoded and the call will fail.
+
+To stop the sever, pass it to the `stop-server` function:
+
+~~~clojure
+(jetty/stop-server server)
+~~~
+
+### Configuration
+
+### With-server macro
+
+### Component
 
 ## HTTP Stub
 

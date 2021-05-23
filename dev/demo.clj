@@ -1,6 +1,7 @@
 (ns demo
   (:require
    [farseer.http :as http]
+   [farseer.jetty :as jetty]
    [farseer.handler :refer [make-handler]]
 
    [cheshire.core :as json]
@@ -382,3 +383,59 @@
     {:handler/function #'rpc-sum
      :handler/spec-in :math/sum.in
      :handler/spec-out :math/sum.out}}})
+
+
+(def config
+  {:rpc/handlers
+   {:math/sum
+    {:handler/function (fn [ctx params]
+                         (println ctx))}}})
+
+
+(defn some-rpc [context params]
+  (let [{:http/keys [request]} context
+        {:keys [user]} request]
+    (when-not request
+      (throw ...))))
+
+(def app
+  (http/make-app config))
+
+(def rpc
+  {:id 1
+   :jsonrpc "2.0"
+   :method :math/sum
+   :params [1 2]})
+
+(def request
+  {:request-method :post
+   :uri "/"
+   :headers {"content-type" "application/json"}
+   :body (-> rpc json/generate-string .getBytes)})
+
+(def response
+  (-> (app request)
+      (update :body json/parse-string true)))
+
+#_
+{:http/request {:request-method :post, :uri /, :headers {content-type application/json}, :body {:id 1, :jsonrpc 2.0, :method math/sum, :params [1 2]}}, :rpc/id 1, :rpc/method :math/sum}
+
+
+(def app
+  (make-app config {:app/version "0.0.1"}))
+
+(defn rpc-func [context params]
+  {:message (str "The version is " (:app/version context))})
+
+
+(def config
+  {:rpc/handlers
+   {:math/sum
+    {:handler/function #'rpc-sum
+     :handler/spec-in :math/sum.in
+     :handler/spec-out :math/sum.out}}})
+
+(def server
+  (jetty/start-server config))
+
+(jetty/stop-server server)
