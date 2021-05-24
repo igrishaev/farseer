@@ -1156,11 +1156,89 @@ To stop the sever, pass it to the `stop-server` function:
 (jetty/stop-server server)
 ~~~
 
+The `start-server` function also accepts a second optional argument which is a
+context map.
+
 ### Configuration
+
+[jetty-params]: https://github.com/ring-clojure/ring/blob/master/ring-jetty-adapter/src/ring/adapter/jetty.clj#L162
+
+- `:jetty/port` (8080 by default) the port to listen to.
+
+- `:jetty/join?` (`false` by default) whether or not to wait for the server
+  being stopped. Whent it's `true`, the main thread will hang until you press
+  Ctrl-C.
+
+- any other [Jetty-related key][jetty-params] with the `:jetty/` namespace, for
+  example: `:jetty/ssl-context`, `:jetty/max-threads` and so on. The library
+  will scan the config for the `:jetty/`-prefixed keys, select them, unqualify
+  and pass to the `run-jetty` function.
 
 ### With-server macro
 
+The macro `with-server` temporary spawns an RPC server. It accepts a config, an
+optional context map and a block of code to execute.
+
+~~~clojure
+(jetty/with-server [config {:foo 42}]
+  (println 1 2 3))
+~~~
+
 ### Component
+
+The Jetty subpackage also provides a component for use with the Component
+Clojure library. The `jetty/component` function creates a component. It takes a
+config and an optional context map.
+
+~~~clojure
+(def jetty
+  (jetty/component config {:some "field"}))
+~~~
+
+Now that you have an initiated component, you can start and stop it with
+functions from the Component library.
+
+~~~clojure
+(require '[com.stuartsierra.component :as component])
+
+(def jetty-started
+  (component/start jetty))
+
+;; Here, the server starts working
+
+(def jetty-stopped
+  (component/stop jetty-started))
+
+;; Now it's shut down.
+
+~~~
+
+Of course, it's better to place the component into a system. One more benefit of
+a system is, all the dependencides will become a context map. For example, if
+your Jetty component depends on the database, cache, Kafka, and whaterwer else,
+you'll have them all in the context map.
+
+~~~clojure
+(defn make-system
+  [rpc-config db-config cache-config]
+  (component/system-using
+   (component/system-map
+    :cache (cache-component cache-config)
+    :db-pool (db-component db-config)
+    :rpc-server (jetty/component rpc-config))
+   {:rpc-server [:db-pool :cache]}))
+~~~
+
+The function above will make a new system which consists from the RPC server,
+cache and database pooling connection. Once the system gets started, the context
+map of all RPC functions will have the `:db-pool` and `:cache` keys.
+
+~~~clojure
+(defn rpc-user-get-by-id
+  [{:keys [db-pool cache]} [user-id]]
+  (or (get-user-from-cache cache user-id)
+      (get-user-from-db db-pool user-id)))
+~~~
 
 ## HTTP Stub
 

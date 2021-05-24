@@ -81,7 +81,9 @@
 
    :dev
    {:source-paths ["dev"]
-    :dependencies [[ch.qos.logback/logback-classic]]
+    :dependencies [[ch.qos.logback/logback-classic]
+                   [com.stuartsierra/component]]
+
     :global-vars {*assert* true
                   *warn-on-reflection* true}
     :jvm-opts ["-Dclojure.spec.compile-asserts=true"

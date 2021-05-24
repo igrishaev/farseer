@@ -58,14 +58,13 @@
 
   ([config context]
 
-   (with-meta {}
+   (with-meta context
 
      {'com.stuartsierra.component/start
       (fn [{:as this :jetty/keys [server]}]
         (if server
           this
-          (let [context (merge context this)
-                server (start-server config context)]
+          (let [server (start-server config this)]
             (assoc this :jetty/server server))))
 
       'com.stuartsierra.component/stop

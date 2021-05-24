@@ -3,6 +3,7 @@
    [farseer.http :as http]
    [farseer.jetty :as jetty]
    [farseer.handler :refer [make-handler]]
+   [com.stuartsierra.component :as component]
 
    [cheshire.core :as json]
 
@@ -439,3 +440,37 @@
   (jetty/start-server config))
 
 (jetty/stop-server server)
+
+
+(jetty/with-server [config {:foo 42}]
+  (println 1 2 3))
+
+
+
+#_
+(require '[com.stuartsierra.component :as component])
+
+(def jetty
+  (jetty/component config {:some "field"}))
+
+(def jetty-started
+  (component/start jetty))
+
+(def jetty-stopped
+  (component/stop jetty-started))
+
+
+(defn make-system
+  [rpc-config db-config cache-config]
+  (component/system-using
+   (component/system-map
+    :cache (cache-component cache-config)
+    :db-pool (db-component db-config)
+    :rpc-server (jetty/component rpc-config))
+   {:rpc-server [:db-pool :cache]}))
+
+
+(defn rpc-user-get-by-id
+  [{:keys [db-pool cache]} [user-id]]
+  (or (get-user-from-cache cache user-id)
+      (get-user-from-db db-pool user-id)))
