@@ -36,9 +36,26 @@ documentation, and more.
     + [Raising Exceptions](#raising-exceptions)
   * [Configuration](#configuration)
 - [Ring HTTP Handler](#ring-http-handler)
+    + [Negative Responses](#negative-responses)
+    + [Batch Requests in HTTP](#batch-requests-in-http)
+    + [Configuration](#configuration-1)
+    + [Middleware & Authirization](#middleware--authirization)
+    + [HTTP Context](#http-context)
 - [Jetty Server](#jetty-server)
+  * [Configuration](#configuration-2)
+  * [With-server macro](#with-server-macro)
+  * [Component](#component)
 - [HTTP Stub](#http-stub)
+    + [Multiple Stub](#multiple-stub)
+    + [Tests](#tests)
+    + [Negative Responses](#negative-responses-1)
 - [HTTP Client](#http-client)
+    + [Configuration](#configuration-3)
+    + [Handling Response](#handling-response)
+    + [Notifications](#notifications-1)
+    + [Batch Requests](#batch-requests-1)
+    + [Connection Pool](#connection-pool)
+    + [Component](#component-1)
 - [Documentation Builder](#documentation-builder)
 - [Ideas & Further Development](#ideas--further-development)
 
@@ -1365,6 +1382,20 @@ play the scenario when a user is not found on the server, componse the config:
 ~~~
 
 ## HTTP Client
+
+This package is to communiate with an RPC Server. Add it to the project:
+
+#### Configuration
+
+#### Handling Response
+
+#### Notifications
+
+#### Batch Requests
+
+#### Connection Pool
+
+#### Component
 
 ## Documentation Builder
 
