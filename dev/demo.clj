@@ -2,6 +2,7 @@
   (:require
    [farseer.http :as http]
    [farseer.jetty :as jetty]
+   [farseer.stub :as stub]
    [farseer.handler :refer [make-handler]]
    [com.stuartsierra.component :as component]
 

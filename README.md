@@ -1242,6 +1242,50 @@ map of all RPC functions will have the `:db-pool` and `:cache` keys.
 
 ## HTTP Stub
 
+This package provides a couple of macros for making HTTP RPC stubs. These are
+local HTTP servers that run on your machine. The difference with the Jetty
+package is that a stub returns a pre-defined data which is quite useful for
+testing your application.
+
+Imagine you have a piece of code that interacts with two RPC endpoints. To make
+this code well tested, you need to cover the cases:
+
+- both sources work fine;
+- the first one works, the second returns an error;
+- the first one is unavailable, the second one works;
+- neither of them work.
+
+The package
+
+
+(require '[farseer.stub :as stub])
+
+(def PORT 8008)
+
+(def config
+  {:jetty/port PORT
+
+   :stub/handlers
+   {:user/get-by-id
+    {:name "Ivan"
+     :email "test@test.com"}
+
+    :some/trigger-error
+    stub/invalid-request
+
+    :some/failure
+    (fn [& _]
+      (/ 0 0))}})
+
+
+error functions
+
+(stub/with-stub config
+  ...)
+
+multiple (stub/with-stubs [config1 config2]
+           ...)
+
 ## HTTP Client
 
 ## Documentation Builder
