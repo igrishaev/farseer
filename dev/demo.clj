@@ -475,3 +475,36 @@
   [{:keys [db-pool cache]} [user-id]]
   (or (get-user-from-cache cache user-id)
       (get-user-from-db db-pool user-id)))
+
+
+
+(def config
+  {:stub/handlers
+   {:user/get-by-id {:name "Ivan"
+                     :email "test@test.com"}
+    :math/sum 42}})
+
+
+
+(stub/with-stub config
+  ;; Execute any expressions
+  ;; while the RPC server is running.
+  )
+
+
+(stub/with-stub config
+  (Thread/sleep 10000))
+
+(stub/with-stubs [config1 config1 ...]
+  ...)
+
+
+(def config
+  {:stub/handlers
+   {:some/failure
+    (fn [& _]
+      (/ 0 0))}})
+
+(def config
+  {:stub/handlers
+   {:user/get-by-id stub/not-found}})

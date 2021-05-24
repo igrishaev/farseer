@@ -1137,9 +1137,6 @@ curl -X POST 'http://127.0.0.1:8080/' \
   --data '{"id": 1, "jsonrpc": "2.0", "method": "math/sum", "params": [1, 2]}' \
   -H 'content-type: application/json' | jq
 
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-100   102    0    35  100    67   8750  16750 --:--:-- --:--:-- --:--:-- 34000
 {
   "id": 1,
   "jsonrpc": "2.0",
@@ -1244,8 +1241,8 @@ map of all RPC functions will have the `:db-pool` and `:cache` keys.
 
 This package provides a couple of macros for making HTTP RPC stubs. These are
 local HTTP servers that run on your machine. The difference with the Jetty
-package is that a stub returns a pre-defined data which is quite useful for
-testing your application.
+package is that a stub returns a pre-defined data which is useful for testing
+your application.
 
 Imagine you have a piece of code that interacts with two RPC endpoints. To make
 this code well tested, you need to cover the cases:
@@ -1255,36 +1252,117 @@ this code well tested, you need to cover the cases:
 - the first one is unavailable, the second one works;
 - neither of them work.
 
-The package
+The package provides the `with-stub` macro which accepts a config map and a
+block of code. The config must have the `:stub/handlers` field which is a map of
+method => result. Like this:
 
-
-(require '[farseer.stub :as stub])
-
-(def PORT 8008)
-
+~~~clojure
 (def config
-  {:jetty/port PORT
+  {:stub/handlers
+   {:user/get-by-id {:name "Ivan"
+                     :email "test@test.com"}
+    :math/sum 42}})
+~~~
 
-   :stub/handlers
-   {:user/get-by-id
-    {:name "Ivan"
-     :email "test@test.com"}
+As the Stub package works on top of Jetty, it takes into account all the Jetty
+keys. For example, to specify the port number, pass the `:jetty/port` field to
+the config:
 
-    :some/trigger-error
-    stub/invalid-request
+~~~clojure
+(def config
+  {:jetty/port 18080
+   :stub/handlers {...}})
+~~~
 
-    :some/failure
+In the example above, defined the handlers such that the methods
+`:user/get-by-id` and `:math/sum` would always return the same response. Now, to
+run a server out from this config, there is the macro `with-stub`:
+
+~~~clojure
+(stub/with-stub config
+  ;; Execute any expressions
+  ;; while the RPC server is running.
+  )
+~~~
+
+Inside the macro, while the servier is running, you can reach it as you normally
+do. If you send either `:user/get-by-id` or `:math/sum` requests to it, you'll
+get the result you defined in the config. Quick check with cURL:
+
+~~~bash
+curl -X POST 'http://127.0.0.1:8080/' \
+  --data '{"id": 1, "jsonrpc": "2.0", "method": "math/sum", "params": [1, 2]}' \
+  -H 'content-type: application/json' | jq
+
+{
+  "id": 1,
+  "jsonrpc": "2.0",
+  "result": 42
+}
+~~~
+
+#### Multiple Stub
+
+If you interact with more than one RPC server at once, there is a multiple
+version of this macro called `with-stub`. It takes a vector of config maps. For
+each one, it runs a local HTTP Stub. All of them get stopped once you exit the
+macro.
+
+~~~clojure
+(stub/with-stubs [config1 config1 ...]
+  ...)
+~~~
+
+#### Tests
+
+To test you application with stubs, you need:
+
+- define a port for the HTTP stub, e.g. 18080;
+- pass this port to the stub config: `:jetty/port ...`;
+- wrap the testing code with the `with-stub` macro;
+- somehow, poit the code which interacts with RPC to the local address like this
+  one: `http://127.0.0.1:18080/...`.
+
+Having everything said above, you can easily check how does your application
+behave when getting a positive or a negative responses from the RPC server.
+
+[stub_test]: https://github.com/igrishaev/farseer/blob/master/farseer-stub/test/farseer/stub_test.clj
+
+You can check out the source code of the [testing module][stub_test] as an
+example.
+
+#### Negative Responses
+
+The result of a method can be not only regular data but also a function. Inside
+it, you can raise an exception or even trigger something weird to imitate a
+disaster. For example, to divide by zero:
+
+~~~clojure
+(def config
+  {:stub/handlers
+   {:some/failure
     (fn [& _]
       (/ 0 0))}})
+~~~
 
+This would lead to a real exception on the server side. Another way of
+triggering the negative response is to pass one of the predefined
+functions. These are:
 
-error functions
+- `stub/invalid-request`,
+- `stub/not-found`,
+- `stub/invalid-params`,
+- `stub/internal-error`,
+- `stub/auth-error`,
 
-(stub/with-stub config
-  ...)
+and some others. Passing them will return an RPC error result. If you want to
+play the scenario when a user is not found on the server, componse the config:
 
-multiple (stub/with-stubs [config1 config2]
-           ...)
+~~~clojure
+(def config
+  {:stub/handlers
+   {:user/get-by-id stub/not-found}})
+~~~
 
 ## HTTP Client
 
