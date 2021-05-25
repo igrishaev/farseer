@@ -1383,20 +1383,144 @@ play the scenario when a user is not found on the server, componse the config:
 
 ## HTTP Client
 
-This package is to communiate with an RPC Server. Add it to the project:
+This package is to communiate with an RPC Server by HTTP protocol. It relies on
+`clj-http` library for making HTTP requests. Add it to the project:
+
+~~~clojure
+;; deps
+[com.github.igrishaev/farseer-client ...]
+
+;; module
+[farseer.client :as client]
+~~~
+
+To reach an RPC server, first you create an instance of the client. This is done
+with the `make-client` function which accepts the config map:
+
+~~~clojure
+(def config-client
+  {:http/url "http://127.0.0.1:18080/"})
+
+(def client
+  (client/make-client config-client))
+~~~
+
+There is only one mandatory field in the config: the `:http/url` one which is
+the endpoint of the server. Other fileds get default values.
+
+For further experiments we will spawn a local Jetty RPC server and will work
+with it using the client.
+
+~~~clojure
+(def config
+  {:jetty/port 18080
+   :rpc/handlers
+   {:math/sum
+    {:handler/function #'rpc-sum
+     :handler/spec-in :math/sum.in
+     :handler/spec-out :math/sum.out}}})
+
+(def server
+  (jetty/start-server config))
+~~~
+
+Once you have the client, perform request with the `client/call` function. It
+accepts the client, method, and optional parameters.
+
+~~~clojure
+(def response
+  (client/call client :math/sum [1 2]))
+
+;; {:id 81081, :jsonrpc "2.0", :result 3}
+~~~
+
+The parameters might be either a vector or map. Also, if the method doesn't
+accept parameters, you may skip it.
+
+~~~clojure
+;; map params
+(client/call client :user/create
+             {:name "Ivan" :email "test@test.com"})
+
+;; no params
+(client/call client :some/side-effect)
+~~~
+
+An example of a negative response:
+
+~~~clojure
+(client/call client :math/sum [nil "a"])
+
+{:error
+ {:code -32602,
+  :message "Invalid params",
+  :data
+  {:explain
+   "nil - failed: number? in: [0] at: [0] spec: :math/sum.in\n\"a\" - failed: number? in: [1] at: [1] spec: :math/sum.in\n",
+   :method "math/sum"}},
+ :id 73647,
+ :jsonrpc "2.0"}
+~~~
+
+You won't get an exception; the result shown above is just data. If you prefer
+exceptions, you can adjust the client configuration (see below).
 
 #### Configuration
 
+The following fields affect the client's behaviour.
+
+- `:rpc/fn-before-send` (default is `identity`) a function which is called
+  before the HTTP request gets sent to the server. It accepts the Clj-http
+  request map and should return it as well. The function useful for signing
+  requests, authentication and so on.
+
+- `:rpc/fn-id` (default is `:id/int`) determines an algorithm for generating
+  IDs. The `:id/int` value means an ID will be a random integer; `:id/uuid`
+  stands for a random UUID. You can also pass a custom function of no arguments
+  that must return either integer or string.
+
+- `:rpc/ensure?` (default is `false`)
+
+
+- `:http/method` (default is `:post`)
+
+- `:http/headers` (default is `{:user-agent "farseer.client"}`)
+
+- `:http/as` (`:json`)
+
+- `:http/content-type` (`:json`)
+
+As you have already guessed, the HTTP package takes into account all the keys
+prefixed with the `:http/` namespace. These are the standard Clj-http keys, .e.g
+`:http/socket-timeout`, `:http/throw-exceptions?` and others, so you configure
+the HTTP part as you want. When making a request, the client scans the config
+for the `:http/`-prefixed keys, selects them, removes the namespace and passes
+to the `clj-http/request` function as a map.
+
+The `:conn-mgr/` keys specify options for the connection manager:
+
+- `:conn-mgr/timeout`,
+- `:conn-mgr/threads`,
+- `:conn-mgr/default-per-route`,
+- `:conn-mgr/insecure?`,
+
+and others. The have the default values copied from Clj-http. The connection
+manager is not created by default. You need to setup it manually (see below).
+
 #### Handling Response
+
+#### Auth
 
 #### Notifications
 
 #### Batch Requests
 
-#### Connection Pool
+#### Connection Manager (Pool)
 
 #### Component
 
 ## Documentation Builder
+
+Docs
 
 ## Ideas & Further Development

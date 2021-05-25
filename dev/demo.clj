@@ -3,6 +3,7 @@
    [farseer.http :as http]
    [farseer.jetty :as jetty]
    [farseer.stub :as stub]
+   [farseer.client :as client]
    [farseer.handler :refer [make-handler]]
    [com.stuartsierra.component :as component]
 
@@ -508,3 +509,40 @@
 (def config
   {:stub/handlers
    {:user/get-by-id stub/not-found}})
+
+
+
+(def config
+  {:http/url "http://127.0.0.1:8080/"})
+
+
+(def client
+  (client/make-client config))
+
+
+
+
+;; --------
+
+
+(def config
+  {:jetty/port 18080
+   :rpc/handlers
+   {:math/sum
+    {:handler/function #'rpc-sum
+     :handler/spec-in :math/sum.in
+     :handler/spec-out :math/sum.out}}})
+
+
+(def server
+  (jetty/start-server config))
+
+
+(def config-client
+  {:http/url "http://127.0.0.1:18080/"})
+
+(def client
+  (client/make-client config-client))
+
+(def response
+  (client/call client :math/sum [1 2]))
