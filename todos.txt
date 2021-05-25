@@ -1,4 +1,6 @@
 
+rpc/ensure? for batch
+
 config in a file
 resolve fn symbols
 check config (resolve fns, get specs)

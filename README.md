@@ -52,9 +52,10 @@ documentation, and more.
 - [HTTP Client](#http-client)
     + [Configuration](#configuration-3)
     + [Handling Response](#handling-response)
+    + [Auth](#auth)
     + [Notifications](#notifications-1)
     + [Batch Requests](#batch-requests-1)
-    + [Connection Pool](#connection-pool)
+    + [Connection Manager (Pool)](#connection-manager-pool)
     + [Component](#component-1)
 - [Documentation Builder](#documentation-builder)
 - [Ideas & Further Development](#ideas--further-development)
@@ -1653,7 +1654,6 @@ Some important notes on this:
                [:math/sum ["aa" nil]]
                [:math/sum [3 4]]])
 
-
 [{:id 75623 :jsonrpc "2.0" :result 3}
  {:error
   {:code -32602
@@ -1671,10 +1671,36 @@ change in the future).
 
 #### Connection Manager (Pool)
 
+Clj-http offers a connection manager for HTTP requests. It's a pool of open TCP
+connections. Sending requests within a pool is much faster then opening and
+closing new connection every time. The package provides some bits to handle
+connection manager for the client.
+
+The function `client/start-conn-mgr` takes either a config or a client and
+returns the same object with the new connection manager associated with it under
+the `:http/connection-manager` key. If you pass the result to the `client/call`
+function, it will take the manager into account, and the request will work
+faster.
+
+The opposite function `client/stop-conn-mgr` stops the manager (if present) and
+returns the object without the key.
+
+The macro `client/with-conn-mgr` enables the connection manager temporary. It
+takes a binding form and a block of code to execute. Insite the macro, the
+object bound to the first symbol from the vector form will carry the open
+manager.
+
 #### Component
+
+Since the client might have a state (a connection manager), you can put it into
+the system. There is a function `client/component` which returns an HTTP client
+charged with the `start` and `stop` methods. These methods turn on and off
+connection pool for the client.
+
+...example
 
 ## Documentation Builder
 
-Docs
+The last package in the list helps you to generate a documentation
 
 ## Ideas & Further Development
