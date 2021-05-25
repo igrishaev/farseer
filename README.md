@@ -1682,13 +1682,19 @@ the `:http/connection-manager` key. If you pass the result to the `client/call`
 function, it will take the manager into account, and the request will work
 faster.
 
+...example
+
 The opposite function `client/stop-conn-mgr` stops the manager (if present) and
 returns the object without the key.
 
+...example
+
 The macro `client/with-conn-mgr` enables the connection manager temporary. It
-takes a binding form and a block of code to execute. Insite the macro, the
+takes a binding form and a block of code to execute. Inside the macro, the
 object bound to the first symbol from the vector form will carry the open
 manager.
+
+...example
 
 #### Component
 
