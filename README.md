@@ -1509,11 +1509,165 @@ manager is not created by default. You need to setup it manually (see below).
 
 #### Handling Response
 
+By default, the calling the servier just returns the body of the HTTP
+response. Thus, it's up to you how to handle the `:result` and `:error`
+fields. But sometimes, the good old exception-based approach is better: you
+either get a result or an error pops up.
+
+The `:rpc/ensure?` option is exactly for that. When it's false (which is default
+behaviour), you just a parsed body of the HTTP response. When it's true, there
+is a following condition:
+
+- for a positive response (no `:error` field) you'll get the content of the
+  `:result` field. For example:
+
+~~~clojure
+(def config-client
+  {:rpc/ensure? true
+   :http/url "http://127.0.0.1:18080/"})
+
+(def client
+  (client/make-client config-client))
+
+(client/call client :math/sum [1 2])
+;; 3
+~~~
+
+For the error cases, you'll get an exception:
+
+~~~clojure
+(client/call client :math/sum [1 "two"])
+
+17:04:34.780 INFO  farseer.handler - RPC error, id: 94415, method: math/sum, code: -32602, message: Invalid params
+
+Unhandled clojure.lang.ExceptionInfo
+RPC error, id: 94415, method: :math/sum, code: -32602, message: Invalid
+params
+#:rpc{:id 94415,
+      :method :math/sum,
+      :code -32602,
+      :message "Invalid params",
+      :data
+      {:explain "\"two\" - failed: number? in: [1] at: [1] spec: :math/sum.in\n",
+       :method "math/sum"}}
+             client.clj:  122  farseer.client/ensure-handler
+             client.clj:   97  farseer.client/ensure-handler
+             client.clj:  148  farseer.client/make-request
+             client.clj:  128  farseer.client/make-request
+             client.clj:  187  farseer.client/call
+             client.clj:  179  farseer.client/call
+~~~
+
+Pay attention that the `:rpc/ensure?` option doesn't affect batch requests (see
+below).
+
 #### Auth
+
+[clj-http-auth]: https://github.com/dakrone/clj-http#authentication
+
+Handling authentication for the client is simple. Clj-http [already
+covers][clj-http-auth] most of the authentication types, so you only need to
+pass proper options to the config. If the server is protected with Basic auth,
+you extend the config like this:
+
+~~~clojure
+(def config-client
+  {:http/url "http://127.0.0.1:18080/"
+   :http/basic-auth ["user" "password"]})
+~~~
+
+For oAuth2, you pass another key:
+
+~~~clojure
+(def config-client
+  {:http/url "http://127.0.0.1:18080/"
+   :http/oauth-token "***********"})
+~~~
+
+If the server requires a constant token, you can specify it directly in headers:
+
+~~~clojure
+(def config-client
+  {:http/url "http://127.0.0.1:18080/"
+   :http/headers {"authorization" "Bearer *********"}})
+~~~
+
+Finally, the `:rpc/fn-before-send` parameter allows your to do everything with
+the request before it gets sent to the server. There might be a custom function
+which supplements the request with some custom headers that are calculated on
+the fly. For example:
+
+~~~clojure
+(defn sign-request
+  [{:as request :keys [body]}]
+  (let [body-hash (calc-body-hash body)
+        sign (sign-body-hash body-hash "*******")
+        header (str "Bearer " sign)]
+    (assoc-in request [:headers "authorization"] header)))
+
+(def config-client
+  {:http/url "http://127.0.0.1:18080/"
+   :rpc/fn-before-send sign-request})
+~~~
 
 #### Notifications
 
+A notification is when you're not interested in the response from the server. To
+send a notification, use the `client/notify` function. Its signature looks the
+same: the client, method, and optional params. The result will be `nil`.
+
+~~~clojure
+(client/notify client :math/sum [1 2])
+;; nil
+~~~
+
 #### Batch Requests
+
+To send batch requests, there is the `client/batch` function. It takes the
+client and a vector of tasks. Each task is a pair of (method, params). Like
+this:
+
+~~~clojure
+(client/batch client
+              [[:math/sum [1 2]]
+               [:math/sum [2 3]]
+               [:math/sum [3 4]]])
+
+[{:id 51499 :jsonrpc "2.0" :result 3}
+ {:id 45992 :jsonrpc "2.0" :result 5}
+ {:id 84590 :jsonrpc "2.0" :result 7}]
+~~~
+
+Some important notes on this:
+
+- There will be only one HTTP request under the hood.
+
+- The order of the result maps always match the oreder of the initial tasks.
+
+- If one of the tasks fails, you'll get a negative map for it. The whole request
+  won't crush.
+
+~~~clojure
+(client/batch client
+              [[:math/sum [1 2]]
+               [:math/sum ["aa" nil]]
+               [:math/sum [3 4]]])
+
+
+[{:id 75623 :jsonrpc "2.0" :result 3}
+ {:error
+  {:code -32602
+   :message "Invalid params"
+   :data
+   {:explain "\"aa\" - failed: number? in: [0] at: [0] spec: :math/sum.in\nnil - failed: number? in: [1] at: [1] spec: :math/sum.in\n"
+    :method "math/sum"}}
+  :id 43075
+  :jsonrpc "2.0"}
+ {:id 13160 :jsonrpc "2.0" :result 7}]
+~~~
+
+The `:rpc/ensure?` option doesn't apply to batch requests (which is a subject to
+change in the future).
 
 #### Connection Manager (Pool)
 

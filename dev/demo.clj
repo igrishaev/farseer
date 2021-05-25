@@ -546,3 +546,42 @@
 
 (def response
   (client/call client :math/sum [1 2]))
+
+
+(def config-client
+  {:rpc/ensure? true
+   :http/url "http://127.0.0.1:18080/"})
+
+(def client
+  (client/make-client config-client))
+
+(client/call client :math/sum [1 2])
+;; 3
+
+
+(def config-client
+  {:rpc/ensure? true
+   :http/url "http://127.0.0.1:18080/"})
+
+(def config-client
+  {:http/url "http://127.0.0.1:18080/"
+   :http/basic-auth ["user" "password"]})
+
+
+(def config-client
+  {:http/url "http://127.0.0.1:18080/"
+   :http/headers {"authorization" "Bearer *********"}})
+
+
+(defn sign-request
+  [{:as request :keys [body]}]
+  (let [body-hash (calc-body-hash body)
+        sign (sign-body-hash body-hash "*******")
+        header (str "Bearer " sign)]
+    (assoc-in request [:headers "authorization"] header)))
+
+
+(client/batch client
+              [[:math/sum [1 2]]
+               [:math/sum [2 3]]
+               [:math/sum [3 4]]])
