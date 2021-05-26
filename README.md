@@ -18,7 +18,7 @@ documentation, and more.
 - [RPC Handler](#rpc-handler)
   * [Method handlers](#method-handlers)
   * [Specs](#specs)
-    + [Intput Spec](#intput-spec)
+    + [Input Spec](#input-spec)
     + [Output Spec](#output-spec)
     + [In Production](#in-production)
   * [More on Context](#more-on-context)
@@ -41,7 +41,7 @@ documentation, and more.
     + [Negative Responses](#negative-responses)
     + [Batch Requests in HTTP](#batch-requests-in-http)
     + [Configuration](#configuration-1)
-    + [Middleware & Authirization](#middleware--authirization)
+    + [Middleware & Authorization](#middleware--authorization)
     + [HTTP Context](#http-context)
 - [Jetty Server](#jetty-server)
   * [Configuration](#configuration-2)
@@ -74,7 +74,7 @@ documentation, and more.
 
 Briefly, JSON RPC is a protocol based on HTTP & JSON. When calling the server,
 you specify the method (procedure) name and its parameters. The parameters could
-either a map of a vector. The server returns a JSON reponse with the `result` or
+either a map of a vector. The server returns a JSON response with the `result` or
 `error` fields. For example:
 
 Request:
@@ -103,16 +103,16 @@ RPC protocol brings significant and positive changes in your API, namely:
 
 - All the data is located in one place. There is no need to parse the URI, query
   params, check out the method and so on. You don't need to guess which HTTP
-  method to pick (PUT, PATCH) for an operation when serveral entities change.
+  method to pick (PUT, PATCH) for an operation when several entities change.
 
-- RPC grows horisontaly with ease. Once you've set it up, you only extend
+- RPC grows horizontally with ease. Once you've set it up, you only extend
   it. Technically it means adding a new key into a map.
 
 - RPC doesn't depend on transport. You can save the payload in Cassandra or push
   to Kafka. Later on, you can replay the sequence as it has everything you need.
 
-- RPC is a great choice for intercation between internal services. When all the
-  services follow the same protocol, it's easy to develop and maintan them.
+- RPC is a great choice for interaction between internal services. When all the
+  services follow the same protocol, it's easy to develop and maintain them.
   When protected with authentication, RPC can be provided to the end customers
   as well.
 
@@ -197,7 +197,7 @@ and so on (see the list of packages [on Clojars][com.github.igrishaev]).
 
 ## RPC Handler
 
-The basic `com.github.igrishaev/farseer-handler` package provies an
+The basic `com.github.igrishaev/farseer-handler` package provides an
 implementation of RPC protocol without a transport level. This means, you only
 define the RPC handlers and specs no matter where the data comes from. There are
 additional packages that bring HTTP transport for the handler you built.
@@ -246,9 +246,9 @@ Now declare a handler and call it:
 ### Method handlers
 
 The `rpc-sum` function is a handler for the `:math/sum` method. The function
-takes **exactly two** argumets. The first argumant is the context map which
+takes **exactly two** arguments. The first argument is the context map which
 we'll discuss later. The second is the parameters passed to the method in
-request. They might be either a map or a vector. Alternatevly, a method can be
+request. They might be either a map or a vector. Alternately, a method can be
 free from parameters at all.
 
 The function might be defined in another namespace. In this case, you import it
@@ -313,7 +313,7 @@ specify a non-existing one, you'll get a negative response:
 
 ### Specs
 
-The code above doesn't valiate the incoming parameters and thus is dangerous to
+The code above doesn't validate the incoming parameters and thus is dangerous to
 execute. If you pass something like `["one" nil]` instead of two numbers, you'll
 end up with `NPE`, which is not good.
 
@@ -321,7 +321,7 @@ For each handler, you can specify a couple of specs, the input and output
 ones. The input spec validates the incoming `params` field, and the output spec
 is for the result of the function call with these parameters.
 
-#### Intput Spec
+#### Input Spec
 
 So, if you want to protect our `:math/sum` handler from weird data, you declare
 the specs:
@@ -456,13 +456,13 @@ tests to save time in production.
 [component]: https://github.com/stuartsierra/component
 [integrant]: https://github.com/weavejester/integrant
 
-OK, summing numbers is good for tuturial but makes no sense in real
-projects. Because there, we're moslty intreseted in IO and database
+OK, summing numbers is good for tutorial but makes no sense in real
+projects. Because there, we're mostly interested in IO and database
 access. Until now, it wasn't clear how a function can reach Postgres or Kafka
 clients especially if the project relies on system (e.g. [Component][component]
 or [Integrant][integrant]).
 
-In OOP languages, the environment for the RPC method usualy comes from the
+In OOP languages, the environment for the RPC method usually comes from the
 `this` parameter. It's an instance of some `RPCHadler` class that has fields for
 the database connection, message queue client and so on. In Clojure, we act
 almost like this, but instead of `this` object, we use context.
@@ -548,8 +548,8 @@ The call:
 
 Use dynamic context when to pass a value that is only needed for the current RPC
 request. In that case, pass the context map as the second argument to the
-function made by the `make-handler`. The example with the dabase would look like
-this:
+function made by the `make-handler`. The example with the database would look
+like this:
 
 ~~~clojure
 ;; no static context
@@ -594,7 +594,7 @@ it like this:
 
 #### Request
 
-An RPC request is a map of the followint fields:
+An RPC request is a map of the following fields:
 
 - `:id`: either a number or a string value representing this request. The handler
   must return the same id in response unless it was a notification (see below).
@@ -662,6 +662,8 @@ automatically.
 
 #### Error Codes
 
+TODO
+
 The library provides the following error codes and messages:
 
 | Code    | Message | Meaning
@@ -672,9 +674,9 @@ The library provides the following error codes and messages:
 
 ### Notifications
 
-Sometimes, you're not interested in the response from an RPC servier. Say, if
+Sometimes, you're not interested in the response from an RPC server. Say, if
 you delete a user, there is nothing for you to return. In this case, you send a
-notification rather than a requeset. Notifications are formed similar but have
+notification rather than a request. Notifications are formed similar but have
 no the `:id` field. When replying to the notification, the server returns
 nothing. For example:
 
@@ -686,9 +688,9 @@ nothing. For example:
 nil
 ~~~
 
-Notifications are usefull to trigger some side effects on the server.
+Notifications are useful to trigger some side effects on the server.
 
-Rememeber, if you pass a missing method or wrong input data (or any other error
+Remember, if you pass a missing method or wrong input data (or any other error
 occurs), you'll get a negative response anyway:
 
 ~~~clojure
@@ -788,9 +790,11 @@ response maps for notifications in the result vector:
 
 #### Note on Parallelism
 
-By default, Farseer uses the standard `pmap` function. It executes the tasks in
-semi-parallel way (see the comments for `pmap` on Clojuredocs). Maybe in the
-future, we could use a custom fixed thread executor for more control.
+[pmap]: https://clojuredocs.org/clojure.core/pmap
+
+By default, Farseer uses the standard [`pmap` function][pmap]. It executes the
+tasks in semi-parallel way. Maybe in the future, we could use a custom fixed
+thread executor for more control.
 
 #### Configuring & Limiting Batch Requests
 
@@ -891,7 +895,9 @@ java.lang.ArithmeticException: Divide by zero
 
 #### Expected Errors
 
-In the following cases, we excpect to get a negative response:
+TODO
+
+In the following cases, we expect to get a negative response:
 
 - JSON parse error:
 
@@ -927,11 +933,11 @@ The namespace `farseer.error` provides several functions for errors. Use them to
 throw exceptions to get an appropriate RPC response.
 
 Then RPC handler catches an exception, it gets the data using the `ex-data`
-function. Then it looks for some special fields to componse the
+function. Then it looks for some special fields to compose the
 response. Namely, these fields are:
 
 - `:rpc/code`: a number representing the error. When specified, it becomes the
-  `code` field of the error reponse.
+  `code` field of the error response.
 
 - `:rpc/message`: a string explaining the error. Becomes the `message` field of
   the error response.
@@ -944,7 +950,7 @@ response. Namely, these fields are:
   e.g. `:debug`, `:info`, `:warn`, `:error`.
 
 - `:log/stacktrace?`: boolean, whether to log the entire stack trace or the
-  message only. Useful for "methdod not found" or "wrong input" cases because
+  message only. Useful for "method not found" or "wrong input" cases because
   there is no need for the full stack trace in such cases.
 
 The data fetched from the exception instance gets merged with the default error
@@ -1016,7 +1022,7 @@ have default values, so you can just pass the config to the `make-app` function:
   (http/make-app config))
 ~~~
 
-Now let's componse the HTTP request to the app:
+Now let's compose the HTTP request to the app:
 
 ~~~clojure
 (def rpc
@@ -1046,7 +1052,7 @@ and call it like an HTTP server:
 
 #### Negative Responses
 
-A quick example of how would the hanlder behaive in case of an error:
+A quick example of how would the handler behave in case of an error:
 
 ~~~clojure
 (def rpc
@@ -1129,7 +1135,7 @@ Here is a list of HTTP options the library support:
 - `:http/middleware` (default is the `farseer.http/default-middleware` vector) a
   list of HTTP middleware to apply to the HTTP handler. See the next section.
 
-#### Middleware & Authirization
+#### Middleware & Authorization
 
 By default, the handler gets wrapped into a couple of middleware. These are the
 standard `wrap-json-body` and `wrap-json-response` from the
@@ -1152,7 +1158,7 @@ Note: we use the `wrap-json-body` middleware but not `wrap-json-params` to make
 it work with batch requests. The the payload is not a map, it cannot be merged
 to the `:params` field.
 
-By overring the `:http/middleware` field, you can add your own logic to the HTTP
+By overriding the `:http/middleware` field, you can add your own logic to the HTTP
 pipeline. Here is a quick example how you protect the handler with Basic Auth:
 
 Also, you can replace JSON middleware with the one that uses some other format
@@ -1207,7 +1213,7 @@ minimal config we've been using so far.
 ;; #object[org.eclipse.jetty.server.Server 0x3e82fe49 "Server@3e82fe49{STARTED}[9.4.12.v20180830]"]
 ~~~
 
-The default port is 8080. Now that your servier is being run, test it with cURL:
+The default port is 8080. Now that your server is being run, test it with cURL:
 
 ~~~bash
 curl -X POST 'http://127.0.0.1:8080/' \
@@ -1240,7 +1246,7 @@ context map.
 - `:jetty/port` (8080 by default) the port to listen to.
 
 - `:jetty/join?` (`false` by default) whether or not to wait for the server
-  being stopped. Whent it's `true`, the main thread will hang until you press
+  being stopped. When it's `true`, the main thread will hang until you press
   Ctrl-C.
 
 - any other [Jetty-related key][jetty-params] with the `:jetty/` namespace, for
@@ -1260,7 +1266,7 @@ optional context map and a block of code to execute.
 
 ### Component
 
-The Jetty subpackage also provides a component for use with the Component
+The Jetty sub-package also provides a component for use with the Component
 Clojure library. The `jetty/component` function creates a component. It takes a
 config and an optional context map.
 
@@ -1288,8 +1294,8 @@ functions from the Component library.
 ~~~
 
 Of course, it's better to place the component into a system. One more benefit of
-a system is, all the dependencides will become a context map. For example, if
-your Jetty component depends on the database, cache, Kafka, and whaterwer else,
+a system is, all the dependencies will become a context map. For example, if
+your Jetty component depends on the database, cache, Kafka, and waterier else,
 you'll have them all in the context map.
 
 ~~~clojure
@@ -1362,7 +1368,7 @@ run a server out from this config, there is the macro `with-stub`:
   )
 ~~~
 
-Inside the macro, while the servier is running, you can reach it as you normally
+Inside the macro, while the server is running, you can reach it as you normally
 do. If you send either `:user/get-by-id` or `:math/sum` requests to it, you'll
 get the result you defined in the config. Quick check with cURL:
 
@@ -1397,7 +1403,7 @@ To test you application with stubs, you need:
 - define a port for the HTTP stub, e.g. 18080;
 - pass this port to the stub config: `:jetty/port ...`;
 - wrap the testing code with the `with-stub` macro;
-- somehow, poit the code which interacts with RPC to the local address like this
+- somehow, point the code which interacts with RPC to the local address like this
   one: `http://127.0.0.1:18080/...`.
 
 Having everything said above, you can easily check how does your application
@@ -1433,7 +1439,7 @@ functions. These are:
 - `stub/auth-error`,
 
 and some others. Passing them will return an RPC error result. If you want to
-play the scenario when a user is not found on the server, componse the config:
+play the scenario when a user is not found on the server, compose the config:
 
 ~~~clojure
 (def config
@@ -1443,7 +1449,7 @@ play the scenario when a user is not found on the server, componse the config:
 
 ## HTTP Client
 
-This package is to communiate with an RPC Server by HTTP protocol. It relies on
+This package is to communicate with an RPC Server by HTTP protocol. It relies on
 `clj-http` library for making HTTP requests. Add it to the project:
 
 ~~~clojure
@@ -1466,7 +1472,7 @@ with the `make-client` function which accepts the config map:
 ~~~
 
 There is only one mandatory field in the config: the `:http/url` one which is
-the endpoint of the server. Other fileds get default values.
+the endpoint of the server. Other fields get default values.
 
 For further experiments we will spawn a local Jetty RPC server and will work
 with it using the client.
@@ -1569,7 +1575,7 @@ manager is not created by default. You need to setup it manually (see below).
 
 #### Handling Response
 
-By default, the calling the servier just returns the body of the HTTP
+By default, the calling the server just returns the body of the HTTP
 response. Thus, it's up to you how to handle the `:result` and `:error`
 fields. But sometimes, the good old exception-based approach is better: you
 either get a result or an error pops up.
@@ -1702,7 +1708,7 @@ Some important notes on this:
 
 - There will be only one HTTP request under the hood.
 
-- The order of the result maps always match the oreder of the initial tasks.
+- The order of the result maps always match the order of the initial tasks.
 
 - If one of the tasks fails, you'll get a negative map for it. The whole request
   won't crush.
@@ -1819,7 +1825,7 @@ connection pool for the client.
 Perhaps you have already noticed that the config map for the server has enough
 data to be rendered as a document. It would be nice to pass it into a template
 and generate a file each time you build or the application. The Docs package
-servies exactly this purpose.
+services exactly this purpose.
 
 Add the `com.github.igrishaev/farseer-doc` library into your project:
 
@@ -1831,7 +1837,7 @@ Add the `com.github.igrishaev/farseer-doc` library into your project:
 [farseer.doc :as doc]
 ~~~
 
-Pay attention that generating a docfile is usualy a separate task, but not a
+Pay attention that generating a docfile is usually a separate task, but not a
 part of business logic. That's why the application **must not include that
 library in production**. The `:dev`-specific dependencies would be a better
 place for this package.
@@ -1873,7 +1879,7 @@ Here is the list of the fields used for documentation.
 
 - `:doc/title` (string). Describes either the API in general or an RPC method.
 
-- `:doc/description` (string). A description of an API in or an RCP method.
+- `:doc/description` (string). A description of an API in or an RPC method.
 
 - `:doc/resource` (string). A path to a resource with the detailed text with
   examples, edge cases and so on. Useful when the text grows.
@@ -1902,7 +1908,7 @@ Not that you have a documentation-powered config, render it with the
 [doc-default]: https://raw.githubusercontent.com/igrishaev/farseer/master/farseer-doc/resources/templates/farseer/default.md
 
 This function takes a config map, a resource template and a path of the output
-file. The Doc package provides the [default Makdown template][doc-default] which
+file. The Doc package provides the [default Markdown template][doc-default] which
 can be found by the path `"templates/farseer/default.md"`.
 
 In your project, most likely you create a `dev` namespace with a function that
