@@ -11,6 +11,8 @@ documentation, and more.
 <!-- toc -->
 
 - [What and Why is JSON RPC?](#what-and-why-is-json-rpc)
+  * [Benefits](#benefits)
+  * [Disadvantages](#disadvantages)
 - [The Structure of this Project](#the-structure-of-this-project)
   * [Installation](#installation)
 - [RPC Handler](#rpc-handler)
@@ -69,6 +71,57 @@ documentation, and more.
 <!-- tocstop -->
 
 ## What and Why is JSON RPC?
+
+Briefly, JSON RPC is a protocol based on HTTP & JSON. When calling the server,
+you specify the method (procedure) name and its parameters. The parameters could
+either a map of a vector. The server returns a JSON reponse with the `result` or
+`error` fields. For example:
+
+Request:
+
+~~~json
+{"jsonrpc": "2.0", "method": "sum", "params": [1, 2], "id": 3}
+~~~
+
+Response:
+
+~~~clojure
+{"jsonrpc": "2.0", "result": 3, "id": 3}
+~~~
+
+Pay attention: the protocol depends on neither HTTP method, nor query params,
+HTTP headers and so on. Although looking a bit primitive, this schema suddenly
+appears to be robust, scalable and reliable.
+
+### Benefits
+
+RPC protocol brings significant and positive changes in your API, namely:
+
+- There is single API endpoint on the server, for example `/api`. You don't need
+  to concatenate strings manually to build the paths like
+  `/post/42/comments/52352` in REST.
+
+- All the data is located in one place. There is no need to parse the URI, query
+  params, check out the method and so on. You don't need to guess which HTTP
+  method to pick (PUT, PATCH) for an operation when serveral entities change.
+
+- RPC grows horisontaly with ease. Once you've set it up, you only extend
+  it. Technically it means adding a new key into a map.
+
+- RPC doesn't depend on transport. You can save the payload in Cassandra or push
+  to Kafka. Later on, you can replay the sequence as it has everything you need.
+
+- RPC is a great choice for intercation between internal services. When all the
+  services follow the same protocol, it's easy to develop and maintan them.
+  When protected with authentication, RPC can be provided to the end customers
+  as well.
+
+### Disadvantages
+
+The only disadvantage of RPC protocol is that it's free from caching. On the
+other side, we rarely want to get cached data. Most often, it's important to get
+fresh data on each request. If you share some public data that update rarely,
+perhaps you should organize ordinary GET endpoints.
 
 ## The Structure of this Project
 
