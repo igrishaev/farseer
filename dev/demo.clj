@@ -581,7 +581,38 @@
     (assoc-in request [:headers "authorization"] header)))
 
 
+#_
 (client/batch client
               [[:math/sum [1 2]]
                [:math/sum [2 3]]
                [:math/sum [3 4]]])
+
+
+(def config-client
+  {:http/url "http://127.0.0.1:18080/"
+   :http/headers {"authorization" "Bearer *********"}})
+
+
+(def config-client
+  {:conn-mgr/timeout 5
+   :conn-mgr/threads 4
+   :http/url "http://127.0.0.1:18080/"})
+
+(def client
+  (-> config-client
+      client/make-client
+      client/start-conn-mgr))
+
+
+(def client
+  (client/make-client config-client))
+
+(client/with-conn-mgr [client-mgr client]
+  (client/call client-mgr :math/sum [1 2]))
+
+
+(defn make-system
+  []
+  (component/system-using
+
+   {:rpc-server [:db-pool :cache]}))

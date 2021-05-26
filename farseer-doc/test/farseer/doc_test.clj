@@ -79,3 +79,10 @@
     (is (thrown?
          Exception
          (doc/config->context config*)))))
+
+
+(deftest test-render-default
+  (doc/generate-doc
+   config
+   "templates/farseer/default.md"
+   "dev-resources/default-out.md"))

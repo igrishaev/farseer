@@ -58,6 +58,10 @@ documentation, and more.
     + [Connection Manager (Pool)](#connection-manager-pool)
     + [Component](#component-1)
 - [Documentation Builder](#documentation-builder)
+  * [Configuration](#configuration-4)
+  * [Selmer Options](#selmer-options)
+  * [Selmer Context](#selmer-context)
+  * [Rendering Specs](#rendering-specs)
 - [Ideas & Further Development](#ideas--further-development)
 
 <!-- tocstop -->
@@ -1671,9 +1675,11 @@ change in the future).
 
 #### Connection Manager (Pool)
 
-Clj-http offers a connection manager for HTTP requests. It's a pool of open TCP
-connections. Sending requests within a pool is much faster then opening and
-closing new connection every time. The package provides some bits to handle
+[pool]: https://github.com/dakrone/clj-http#persistent-connections
+
+Clj-http offers a [connection manager][pool] for HTTP requests. It's a pool of
+open TCP connections. Sending requests within a pool is much faster then opening
+and closing new connection every time. The package provides some bits to handle
 connection manager for the client.
 
 The function `client/start-conn-mgr` takes either a config or a client and
@@ -1682,19 +1688,43 @@ the `:http/connection-manager` key. If you pass the result to the `client/call`
 function, it will take the manager into account, and the request will work
 faster.
 
-...example
+The function considers the keys which start with the `:conn-mgr/`
+namespace. These keys become a map of standard parameters for connection
+manager.
+
+~~~clojure
+(def config-client
+  {:conn-mgr/timeout 5
+   :conn-mgr/threads 4
+   :http/url "http://127.0.0.1:18080/"})
+
+(def client
+  (-> config-client
+      client/make-client
+      client/start-conn-mgr))
+~~~
 
 The opposite function `client/stop-conn-mgr` stops the manager (if present) and
 returns the object without the key.
 
-...example
+~~~clojure
+(client/stop-conn-mgr client)
+~~~
 
 The macro `client/with-conn-mgr` enables the connection manager temporary. It
 takes a binding form and a block of code to execute. Inside the macro, the
 object bound to the first symbol from the vector form will carry the open
 manager.
 
-...example
+~~~clojure
+;; a client without a pool
+(def client
+  (client/make-client config-client))
+
+;; temporary assing a pool
+(client/with-conn-mgr [client-mgr client]
+  (client/call client-mgr :math/sum [1 2]))
+~~~
 
 #### Component
 
@@ -1703,10 +1733,87 @@ the system. There is a function `client/component` which returns an HTTP client
 charged with the `start` and `stop` methods. These methods turn on and off
 connection pool for the client.
 
-...example
+~~~clojure
+;; no pool yet
+(def client
+  (client/component config-client))
+
+;; enabling the pool
+(def client-started
+  (component/start client))
+
+;; closing the pool
+(component/stop client-started)
+~~~
 
 ## Documentation Builder
 
-The last package in the list helps you to generate a documentation
+Perhaps you have already noticed that the config map for the server has enough
+data to be rendered as a document. It would be nice to pass it into a template
+and generate a file each time you build or test your application. The last
+package servies exactly this purpose.
+
+Add the `com.github.igrishaev/farseer-doc` library into your project:
+
+~~~clojure
+;; deps
+[com.github.igrishaev/farseer-doc ...]
+
+;; ns
+[farseer.doc :as doc]
+~~~
+
+Pay attention that generating a docfile is usualy a separate task, but not a
+part of business logic. That's why the application **must not include that
+library in production**. The `:dev`-specific dependencies would be a better
+place for this package.
+
+### Configuration
+
+To generate the doc, you extend the server config with the keys that have
+`:doc/` namespace. Here is an example:
+
+~~~clojure
+(def config
+  {:doc/title "My API"
+   :doc/description "Long API Description"
+
+   :rpc/handlers
+   {:user/delete
+    {:doc/title "Delete a user by ID"
+     :doc/description "Long text for deleting a user."
+     :handler/spec-in pos-int?
+     :handler/spec-out (s/keys :req-un [:api/message])}
+
+    :user/get-by-id
+    {:doc/title "Get a user by ID"
+     :doc/description "Long text for getting a user."
+     :doc/ignore? false
+     :doc/resource "docs/user-get-by-id.md"
+     :handler/spec-in int?
+     :handler/spec-out
+     (s/map-of keyword? (s/or :int int? :str string?))}
+
+    :hidden/api
+    {:doc/title "Non-documented API"
+     :doc/ignore? true
+     :handler/spec-in any?
+     :handler/spec-out any?}}})
+~~~
+
+The `:doc/title` and `:doc/description` fields are strings. They might locate
+either on the top level of the config or under methods. In the first case they
+describe the API in general, in the second one -- the related RPC method.
+
+Some RPC methods require long description with examples, so the text would be
+huge. To keep them separate, use the `:doc/resource` parameter. It's a string
+that points to a resource with the detailed text. The Doc package will `slurp`
+it when it was set.
+
+### Selmer Options
+
+### Selmer Context
+
+### Rendering Specs
 
 ## Ideas & Further Development
