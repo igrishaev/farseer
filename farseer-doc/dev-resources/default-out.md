@@ -22,6 +22,7 @@ Long text for deleting a user.
 
 <details>
 <summary>Intput schema</summary>
+
 ~~~json
 {
   "type" : "integer",
@@ -29,12 +30,14 @@ Long text for deleting a user.
   "minimum" : 1
 }
 ~~~
+
 </details>
 
 
 
 <details>
 <summary>Output schema</summary>
+
 ~~~json
 {
   "type" : "object",
@@ -46,6 +49,7 @@ Long text for deleting a user.
   "required" : [ "message" ]
 }
 ~~~
+
 </details>
 
 
@@ -80,18 +84,21 @@ Check this [link][link] for more info.
 
 <details>
 <summary>Intput schema</summary>
+
 ~~~json
 {
   "type" : "integer",
   "format" : "int64"
 }
 ~~~
+
 </details>
 
 
 
 <details>
 <summary>Output schema</summary>
+
 ~~~json
 {
   "type" : "object",
@@ -105,6 +112,7 @@ Check this [link][link] for more info.
   }
 }
 ~~~
+
 </details>
 
 
