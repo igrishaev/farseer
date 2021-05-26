@@ -61,7 +61,7 @@
             :title "Get a user by ID"
             :description "Long text for getting a user."
             :resource
-            "\n### Get user by ID examples\n\n```bash\nFOO=42 do this\n```\n\n- one example\n- another example\n- test\n\n[link]: test.com\n\nCheck this [link][link] for more info.\n"
+            "\n### Get user by ID examples\n\n(this text comes from a separate file)\n\n~~~bash\nFOO=42 do this\n~~~\n\n- one example\n- another example\n- test\n\n[link]: test.com\n\nCheck this [link][link] for more info.\n"
             :spec-in {:type "integer" :format "int64"}
             :spec-out
             {:type "object"

@@ -26,18 +26,18 @@
 {% if handler.spec-in %}
 <details>
 <summary>Intput schema</summary>
-```json
+~~~json
 {{ handler.spec-in|json-pretty|safe }}
-```
+~~~
 </details>
 {% endif %}
 
 {% if handler.spec-out %}
 <details>
 <summary>Output schema</summary>
-```json
+~~~json
 {{ handler.spec-out|json-pretty|safe }}
-```
+~~~
 </details>
 {% endif %}
 

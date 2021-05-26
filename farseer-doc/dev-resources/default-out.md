@@ -22,20 +22,20 @@ Long text for deleting a user.
 
 <details>
 <summary>Intput schema</summary>
-```json
+~~~json
 {
   "type" : "integer",
   "format" : "int64",
   "minimum" : 1
 }
-```
+~~~
 </details>
 
 
 
 <details>
 <summary>Output schema</summary>
-```json
+~~~json
 {
   "type" : "object",
   "properties" : {
@@ -45,7 +45,7 @@ Long text for deleting a user.
   },
   "required" : [ "message" ]
 }
-```
+~~~
 </details>
 
 
@@ -63,9 +63,9 @@ Long text for getting a user.
 
 (this text comes from a separate file)
 
-```bash
+~~~bash
 FOO=42 do this
-```
+~~~
 
 - one example
 - another example
@@ -80,19 +80,19 @@ Check this [link][link] for more info.
 
 <details>
 <summary>Intput schema</summary>
-```json
+~~~json
 {
   "type" : "integer",
   "format" : "int64"
 }
-```
+~~~
 </details>
 
 
 
 <details>
 <summary>Output schema</summary>
-```json
+~~~json
 {
   "type" : "object",
   "additionalProperties" : {
@@ -104,7 +104,7 @@ Check this [link][link] for more info.
     } ]
   }
 }
-```
+~~~
 </details>
 
 

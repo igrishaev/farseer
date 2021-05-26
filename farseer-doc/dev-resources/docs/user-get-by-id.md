@@ -3,9 +3,9 @@
 
 (this text comes from a separate file)
 
-```bash
+~~~bash
 FOO=42 do this
-```
+~~~
 
 - one example
 - another example
