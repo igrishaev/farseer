@@ -59,10 +59,12 @@ documentation, and more.
     + [Component](#component-1)
 - [Documentation Builder](#documentation-builder)
   * [Configuration](#configuration-4)
-  * [Selmer Options](#selmer-options)
-  * [Selmer Context](#selmer-context)
+  * [Building](#building)
+  * [Demo](#demo)
+  * [Selmer & Context](#selmer--context)
   * [Rendering Specs](#rendering-specs)
 - [Ideas & Further Development](#ideas--further-development)
+- [Author](#author)
 
 <!-- tocstop -->
 
@@ -1929,12 +1931,27 @@ following snippet:
 {% endif %}
 ```
 
-
-
-
-
-### Selmer Options
-
-### Selmer Context
+Pay attention to the empty lines before and after the JSON block. Without them,
+GitHub renders the content in a weird way.
 
 ## Ideas & Further Development
+
+It would be nice to:
+
+- Keep the entire server config in an EDN file. The functions should be resolved
+  by their full symbols.
+
+- Provide a nested map like method => overrides. With this map, one could
+  specify custom options for specific methods. For example, to enable batch
+  requests in common, but disallow them for specific methods.
+
+- Develop a browser version of the client. The module would have the same
+  functions but rely on Js Fetch API.
+
+- Create a re-frame wrapper for this client. Instead of calling functions, one
+  triggers events.
+
+## Author
+
+Ivan Grishaev, 2021
+https://grishaev.me
