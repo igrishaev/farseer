@@ -1,4 +1,6 @@
 
+;; extra context for templates
+
 rpc/ensure? for batch
 
 config in a file
