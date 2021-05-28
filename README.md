@@ -662,15 +662,22 @@ automatically.
 
 #### Error Codes
 
-TODO
+- `-32700 Parse error`: Used then the server gets a non-JSON/broken payload.
 
-The library provides the following error codes and messages:
+- `-32600 Invalid Request`: The payload is JSON but has wrong shape.
 
-| Code    | Message | Meaning
-| ------- | -------     |
-| -32700  | Parse error |
-| -32600  |                   |
+- `-32601 Method not found`: No such RPC method.
 
+- `-32602 Invalid params`: The parameters do not match the input spec.
+
+- `-32603 Internal error`: Either uncaught exception or the result doesn't match
+  the output spec.
+
+- `-32000 Authentication failure`: Something is wrong with auth/credentials.
+
+[jsonrpc-spec]: https://www.jsonrpc.org/specification
+
+Find more information about the error codes [on this page][jsonrpc-spec].
 
 ### Notifications
 
@@ -895,36 +902,33 @@ java.lang.ArithmeticException: Divide by zero
 
 #### Expected Errors
 
-TODO
-
-In the following cases, we expect to get a negative response:
+In the following cases, we expect to get a negative response (here are some
+examples):
 
 - JSON parse error:
 
 ```clojure
-
+(farseer.error/parse-error!)
 ```
 
 - RPC Method not found:
 
 ```clojure
-
+(farseer.error/not-found!
+  {:rpc/message "I don't have such method"})
 ```
 
 - Wrong input parameters:
 
 ```clojure
-
-```
-
-```clojure
-
+(farseer.error/invalid-params!
+  {:rpc/data {:spec-explain "..."}})
 ```
 
 - Internal error:
 
 ```clojure
-
+(farseer.error/internal-error! nil caught-exception)
 ```
 
 #### Raising Exceptions
@@ -1158,8 +1162,39 @@ Note: we use the `wrap-json-body` middleware but not `wrap-json-params` to make
 it work with batch requests. The the payload is not a map, it cannot be merged
 to the `:params` field.
 
+The `:http/middleware` parameter must be a vector of middleware. Each middleware
+is either a function or a vector of `[function, arg2, arg3, ...]`. In the second
+case, it will be applied to the handler as `(apply function handler arg2, arg3,
+...)`. For example, if a middleware takes additional params, you specify it like
+a vector `[middleware, params]`.
+
 By overriding the `:http/middleware` field, you can add your own logic to the HTTP
 pipeline. Here is a quick example how you protect the handler with Basic Auth:
+
+
+
+~~~clojure
+;; ns imports
+[farseer.http :as http]
+[ring.middleware.basic-authentication :refer [wrap-basic-authentication]]
+
+;; preparing a middleware stack
+(let [fn-auth?
+      (fn [user pass]
+        (and (= "foo" user)
+             (= "bar" pass)))
+
+      middleware-auth
+      [wrap-basic-authentication fn-auth? "auth" http/non-auth-response]
+
+      middleware-stack [middleware-auth
+                        http/wrap-json-body
+                        http/wrap-json-resp]
+
+      config*
+      (assoc config :http/middleware middleware-stack)]
+  ...)
+~~~
 
 Also, you can replace JSON middleware with the one that uses some other format
 like MessagePack, Transient or whatever.
