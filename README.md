@@ -193,12 +193,12 @@ and so on (see the list of packages [on Clojars][com.github.igrishaev]).
 
 ## RPC Handler
 
-The basic `com.github.igrishaev/farseer-handler` package provides an
-implementation of RPC protocol without a transport level. This means, you only
-define the RPC handlers and specs no matter where the data comes from. There are
-additional packages that bring HTTP transport for the handler you built.
+The `com.github.igrishaev/farseer-handler` package provides basic implementation
+of RPC protocol. It has no any transport layer, only a handler that serves RPC
+requests no matter where the data comes from. Other packages provide HTTP layer
+for this handler. You can develop another transport layer as well.
 
-First, add it to the project:
+First, add the package to the project:
 
 ```clojure
 [com.github.igrishaev/farseer-handler ...]
@@ -244,8 +244,8 @@ Now declare a handler and call it:
 The `rpc-sum` function is a handler for the `:math/sum` method. The function
 takes **exactly two** arguments. The first argument is the context map which
 we'll discuss later. The second is the parameters passed to the method in
-request. They might be either a map or a vector. Alternately, a method can be
-free from parameters at all.
+request. They might be either a map or a vector. If a method doesn't accept
+parameters, the arguments will be `nil`.
 
 The function might be defined in another namespace. In this case, you import it
 and pass to the map as usual:
