@@ -261,7 +261,7 @@ and pass to the map as usual:
     {:handler/function math/sum-handler}}})
 ```
 
-It's useful to pass the functions as vars using the `#'` handler:
+It's useful to pass the functions as vars using the `#'` syntax:
 
 ```clojure
 (def config
@@ -270,7 +270,7 @@ It's useful to pass the functions as vars using the `#'` handler:
     {:handler/function #'rpc-sum}}})
 ```
 
-In this case, you can update the function by executing its `defn` form in REPL,
+In this case, you can update the function by evaling its `defn` form in REPL,
 and the changes come into play without re-creating the RPC handler. For example,
 we change plus to minus in the `rpc-sum` function:
 
@@ -280,8 +280,8 @@ we change plus to minus in the `rpc-sum` function:
   (- a b))
 ```
 
-Then we go to the closing bracket and perform `cider-eval-last-sexp`. Now we
-perform a new RPC call and get a new result:
+Then we go to the closing bracket of the `defn` form and perform
+`cider-eval-last-sexp`. Now we make a new RPC call and get a new result:
 
 ```clojure
 (handler {:id 1
@@ -319,8 +319,7 @@ is for the result of the function call with these parameters.
 
 #### Input Spec
 
-So, if you want to protect our `:math/sum` handler from weird data, you declare
-the specs:
+To protect our `:math/sum` handler from weird data, you declare the specs:
 
 ```clojure
 (s/def :math/sum.in
@@ -364,10 +363,10 @@ it, there is standard explain string produced by the `s/explain-str`
 function. This kind of message looks noisy sometimes, and in the future, most
 likely Farseer will use [Expound][expound].
 
-According to the RPC documentation, the `:params` field might be either a map of
-keys or a vector. Thus, for the input spec, you probably use `s/tuple` or
-`s/keys` specs. Our `:math/sum` method accepts vector params. Let's rewrite it
-and the specs so that they work with a map:
+According to the RPC specification, the `:params` field might be either a map or
+a vector. Thus, for the input spec, you probably use `s/tuple` or `s/keys`
+specs. Our `:math/sum` method accepts vector params. Let's rewrite it and the
+specs such that they work with a map:
 
 ```clojure
 ;; a new handler
@@ -410,8 +409,8 @@ Now we pass a map, not vector:
 
 #### Output Spec
 
-If the result of the function doesn't match the output spec, this triggers an
-internal error. Let's reproduce this scenario by changing the spec:
+If the result of the function doesn't match the output spec, it triggers an
+internal error. Let's reproduce this scenario by spoiling the spec:
 
 ```clojure
 (s/def :math/sum.out
@@ -430,7 +429,7 @@ internal error. Let's reproduce this scenario by changing the spec:
          :data {:method :math/sum}}}
 ```
 
-In the log, you'll see the following entry:
+You'll see the following log entry:
 
 ```
 10:18:31.256 ERROR farseer.handler - RPC result doesn't match the output spec,
@@ -452,11 +451,11 @@ tests to save time in production.
 [component]: https://github.com/stuartsierra/component
 [integrant]: https://github.com/weavejester/integrant
 
-OK, summing numbers is good for tutorial but makes no sense in real
-projects. Because there, we're mostly interested in IO and database
-access. Until now, it wasn't clear how a function can reach Postgres or Kafka
-clients especially if the project relies on system (e.g. [Component][component]
-or [Integrant][integrant]).
+Summing numbers is good for tutorial but makes no sense in real projects. We're
+rather interested in networking IO and database access. Until now, it wasn't
+clear how a function can reach Postgres or Kafka clients, especially if the
+project relies on a system framework (e.g. [Component][component] or
+[Integrant][integrant]).
 
 In OOP languages, the environment for the RPC method usually comes from the
 `this` parameter. It's an instance of some `RPCHadler` class that has fields for
@@ -465,8 +464,8 @@ almost like this, but instead of `this` object, we use context.
 
 A context is a map that carries the data needed by the method handler in
 runtime. This is the first argument of a function from the `:handler/function`
-key. By default, the context carries the current id and method of the RPC
-call. If you print the first argument of the function, you'll see:
+key. By default, the context has the current id and method of the RPC call. If
+you print the first argument of the function, you'll see:
 
 ```clojure
 (defn rpc-sum
@@ -481,7 +480,7 @@ Both fields are prefixed with the `:rpc/` namespace to prevent the keys from
 clashing, e.g. `:id` for the RPC call and `:id` for the current user. Instead,
 the framework passes the `:rpc/id` field, and you should pass `:user/id` one.
 
-Actually, there are two ways of passing context: a static and dynamic ones.
+There are two ways of passing context: a static and dynamic ones.
 
 #### Static Context
 
@@ -499,14 +498,14 @@ functions. For example:
 
 We assume the `open-db-connection` returns a connection pool, which is available
 to all the RPC functions as the `:db` field of the context. The `:version` field
-is the application version that is fetched from the text file.
+is the application version that is fetched from a text file.
 
-Now, if we had an RPC method that fetches a user by id, it could look like this:
+Now, if we had an RPC method that fetches a user by id, it would look like this:
 
 ~~~clojure
 (defn get-user-by-id
-  [{:keys [db]}
-   {:keys [user-id]}]
+  [{:keys [db]}        ;; context
+   {:keys [user-id]}]  ;; params
   (jdbc/get-by-id db :users user-id))
 
 (s/def :user/id pos-int?)
@@ -542,16 +541,15 @@ The call:
 
 #### Dynamic Context
 
-Use dynamic context when to pass a value that is only needed for the current RPC
-request. In that case, pass the context map as the second argument to the
-function made by the `make-handler`. The example with the database would look
-like this:
+Use dynamic context to pass a value needed only for the current RPC request or
+you don't have a value yet when building a handler. In that case, pass the
+context map as the second argument to the function made by the
+`make-handler`. The example with the database would look like this:
 
 ~~~clojure
-;; no static context
 (def handler (make-handler config))
 
-;; dynamoc context
+;; dynamic context, the second arg
 (handler {:id 1
           :method :user/get-by-id
           :params {:id 5}
@@ -559,9 +557,9 @@ like this:
          {:db hikari-cp-pool})
 ~~~
 
-Of course, you can use both ways to pass the context. Most likely the database
-is needed by all the RPC functions, so its place in the global context. Some
-minor fields might be passes on demand for certain calls:
+You can use both ways to pass the context. Most likely the database is needed by
+all the RPC functions, so its place in the global context. Some minor fields
+might be passes on demand for certain calls:
 
 ~~~clojure
 (def handler
@@ -570,8 +568,8 @@ minor fields might be passes on demand for certain calls:
 (handler {:id 1 :method ...} {:version "0.2.1"})
 ~~~
 
-The context maps are always merged, so from the function's point of view, they
-act the same.
+The context maps are always merged, so from the function's point of view, there
+is only a single map.
 
 The local context map gets merged into the global one. It gives you an
 opportunity to override the default values from the context. Let's say, if the
