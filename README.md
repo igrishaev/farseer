@@ -74,8 +74,8 @@ documentation, and more.
 
 Briefly, JSON RPC is a protocol based on HTTP & JSON. When calling the server,
 you specify the method (procedure) name and its parameters. The parameters could
-either a map of a vector. The server returns a JSON response with the `result` or
-`error` fields. For example:
+be either a map of a vector. The server returns a JSON response with the
+`result` or `error` fields. For example:
 
 Request:
 
@@ -90,12 +90,12 @@ Response:
 ~~~
 
 Pay attention: the protocol depends on neither HTTP method, nor query params,
-HTTP headers and so on. Although looking a bit primitive, this schema suddenly
-appears to be robust, scalable and reliable.
+nor HTTP headers and so on. Although looking a bit primitive, this schema
+eventually appears to be robust, scalable and reliable.
 
 ### Benefits
 
-RPC protocol brings significant and positive changes in your API, namely:
+RPC protocol brings significant changes into your API, namely:
 
 - There is single API endpoint on the server, for example `/api`. You don't need
   to concatenate strings manually to build the paths like
@@ -119,17 +119,17 @@ RPC protocol brings significant and positive changes in your API, namely:
 ### Disadvantages
 
 The only disadvantage of RPC protocol is that it's free from caching. On the
-other side, we rarely want to get cached data. Most often, it's important to get
-fresh data on each request. If you share some public data that update rarely,
+other hand, we rarely want to get cached data. Most often, it's important to get
+actual data on each request. If you share some public data that update rarely,
 perhaps you should organize ordinary GET endpoints.
 
 ## The Structure of this Project
 
-This project consists from several minor projects that complement each one. The
-thing is, each sub-project requires its own dependencies. If it was a single
-project, you would download lots of stuff you don't really need. Instead, with
-sub-projects, you install only those parts (and transient dependencies) you
-really need in your project.
+Farseer consists from several minor projects that complement each other. Every
+sub-project requires its own dependencies. If it was a single project, you would
+download lots of stuff you don't really need. Instead, with sub-projects, you
+install only those parts (and transient dependencies) you really need in your
+project.
 
 The root project is named `com.github.igrishaev/farseer-all`. It unites all the
 sub-projects listed below:
@@ -151,10 +151,6 @@ sub-projects listed below:
 - `com.github.igrishaev/farseer-doc`: RPC documentation builder.
 
 [groups]: https://github.com/clojars/clojars-web/wiki/Groups
-
-Note: I had to add the `com.github.igrishaev` group id not because I'd like you
-typing my nickname all the time. This is due to recent changes in [Clojars
-policies][groups] that disallow custom group ids unless you own such a domain.
 
 ### Installation
 
