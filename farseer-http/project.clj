@@ -1,4 +1,4 @@
-(defproject com.github.igrishaev/farseer-http "0.1.1"
+(defproject com.github.igrishaev/farseer-http "0.1.2-SNAPSHOT"
 
   :description
   "HTTP Ring handler for an RPC hadnler"
