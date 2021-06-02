@@ -1210,9 +1210,10 @@ be merged with the data the RPC function accepts when being called.
 ~~~
 
 The HTTP handler adds the `:http/request` item into the context. This is the
-instance of the request map that the handler accepts. Having the request, you
-can you handle some extra logic in you function. For example, some middleware
-can supplement the `:user` field to the request.
+instance of the request map that the handler accepted. Having the request, you
+can handle some extra logic in your function. For example, some middleware
+supplements the request with the `:user` field, and you check if the user has
+permissions.
 
 ~~~clojure
 (defn some-rpc [context params]
@@ -1224,8 +1225,8 @@ can supplement the `:user` field to the request.
 
 ## Jetty Server
 
-This sub-package allows you to run an RPC server using Jetty Ring adapter. Add
-it to the project:
+The Jetty sub-package allows you to run an RPC server using Jetty Ring
+adapter. Add it to the project:
 
 ~~~clojure
 ;; deps
@@ -1235,8 +1236,8 @@ it to the project:
 (require '[farseer.jetty :as jetty])
 ~~~
 
-All the config fields of Jetty have default values, so you can just pass a
-minimal config we've been using so far.
+All the Jetty config fields have default values, so we pass a minimal config
+we've been using so far.
 
 ~~~clojure
 (def server
@@ -1275,13 +1276,13 @@ context map.
 
 [jetty-params]: https://github.com/ring-clojure/ring/blob/master/ring-jetty-adapter/src/ring/adapter/jetty.clj#L162
 
-- `:jetty/port` (8080 by default) the port to listen to.
+- `:jetty/port` (8080 by default) is the port to listen to.
 
-- `:jetty/join?` (`false` by default) whether or not to wait for the server
-  being stopped. When it's `true`, the main thread will hang until you press
+- `:jetty/join?` (`false` by default) is whether or not to wait for the server
+  being stopped. When it's `true`, the main thread hangs until you press
   Ctrl-C.
 
-- any other [Jetty-related key][jetty-params] with the `:jetty/` namespace, for
+- any other [Jetty-related keys][jetty-params] with the `:jetty/` namespace, for
   example: `:jetty/ssl-context`, `:jetty/max-threads` and so on. The library
   will scan the config for the `:jetty/`-prefixed keys, select them, unqualify
   and pass to the `run-jetty` function.
@@ -1298,9 +1299,11 @@ optional context map and a block of code to execute.
 
 ### Component
 
-The Jetty sub-package also provides a component for use with the Component
-Clojure library. The `jetty/component` function creates a component. It takes a
-config and an optional context map.
+[component]: https://github.com/stuartsierra/component
+
+The Jetty package also provides a component object for use with the [Component
+library][component]. The `jetty/component` function creates a component. It
+takes a config and an optional context map.
 
 ~~~clojure
 (def jetty
@@ -1316,13 +1319,12 @@ functions from the Component library.
 (def jetty-started
   (component/start jetty))
 
-;; Here, the server starts working
+;; The server starts working
 
 (def jetty-stopped
   (component/stop jetty-started))
 
 ;; Now it's shut down.
-
 ~~~
 
 Of course, it's better to place the component into a system. One more benefit of
@@ -1343,7 +1345,8 @@ you'll have them all in the context map.
 
 The function above will make a new system which consists from the RPC server,
 cache and database pooling connection. Once the system gets started, the context
-map of all RPC functions will have the `:db-pool` and `:cache` keys.
+map of all RPC functions will have the `:db-pool` and `:cache` keys. Here is how
+you reach them in your RPC function:
 
 ~~~clojure
 (defn rpc-user-get-by-id
@@ -1354,10 +1357,9 @@ map of all RPC functions will have the `:db-pool` and `:cache` keys.
 
 ## HTTP Stub
 
-This package provides a couple of macros for making HTTP RPC stubs. These are
-local HTTP servers that run on your machine. The difference with the Jetty
-package is that a stub returns a pre-defined data which is useful for testing
-your application.
+The Stub package provides a couple of macros for making HTTP RPC stubs. These
+are local HTTP servers that run on your machine. The difference with the Jetty
+package is that a stub returns a pre-defined data which is useful for testing.
 
 Imagine you have a piece of code that interacts with two RPC endpoints. To make
 this code well tested, you need to cover the cases:
@@ -1369,7 +1371,7 @@ this code well tested, you need to cover the cases:
 
 The package provides the `with-stub` macro which accepts a config map and a
 block of code. The config must have the `:stub/handlers` field which is a map of
-method => result. Like this:
+method => result. For example:
 
 ~~~clojure
 (def config
@@ -1380,8 +1382,7 @@ method => result. Like this:
 ~~~
 
 As the Stub package works on top of Jetty, it takes into account all the Jetty
-keys. For example, to specify the port number, pass the `:jetty/port` field to
-the config:
+keys. To specify the port number, pass the `:jetty/port` field to the config:
 
 ~~~clojure
 (def config
@@ -1389,9 +1390,10 @@ the config:
    :stub/handlers {...}})
 ~~~
 
-In the example above, defined the handlers such that the methods
-`:user/get-by-id` and `:math/sum` would always return the same response. Now, to
-run a server out from this config, there is the macro `with-stub`:
+In the example above, we defined the handlers such that the methods
+`:user/get-by-id` and `:math/sum` would always return the same response.
+
+To run a server out from this config, there is the macro `with-stub`:
 
 ~~~clojure
 (stub/with-stub config
@@ -1400,9 +1402,9 @@ run a server out from this config, there is the macro `with-stub`:
   )
 ~~~
 
-Inside the macro, while the server is running, you can reach it as you normally
-do. If you send either `:user/get-by-id` or `:math/sum` requests to it, you'll
-get the result you defined in the config. Quick check with cURL:
+While the server is running, you can reach it as you normally do with any HTTP
+client. If you send either `:user/get-by-id` or `:math/sum` requests to it,
+you'll get the result you defined in the config. Quick check with cURL:
 
 ~~~bash
 curl -X POST 'http://127.0.0.1:8080/' \
