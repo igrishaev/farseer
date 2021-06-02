@@ -1420,10 +1420,10 @@ curl -X POST 'http://127.0.0.1:8080/' \
 
 #### Multiple Stub
 
-If you interact with more than one RPC server at once, there is a multiple
-version of this macro called `with-stub`. It takes a vector of config maps. For
-each one, it runs a local HTTP Stub. All of them get stopped once you exit the
-macro.
+There is a multiple version of this macro called `with-stub`. It's useful when
+you interact with more than one RPC server at once. The macro takes a vector of
+config maps. For each one, it runs a local HTTP Stub. All of them get stopped
+once you exit the macro.
 
 ~~~clojure
 (stub/with-stubs [config1 config1 ...]
@@ -1437,16 +1437,14 @@ To test you application with stubs, you need:
 - define a port for the HTTP stub, e.g. 18080;
 - pass this port to the stub config: `:jetty/port ...`;
 - wrap the testing code with the `with-stub` macro;
-- somehow, point the code which interacts with RPC to the local address like this
-  one: `http://127.0.0.1:18080/...`.
-
-Having everything said above, you can easily check how does your application
-behave when getting a positive or a negative responses from the RPC server.
+- Aim the code which interacts with RPC at the local address like this one:
+  `http://127.0.0.1:18080/...`.
 
 [stub_test]: https://github.com/igrishaev/farseer/blob/master/farseer-stub/test/farseer/stub_test.clj
 
-You can check out the source code of the [testing module][stub_test] as an
-example.
+Having everything said above, you can easily check how does your application
+behave when getting a positive or a negative responses from an RPC server. You
+can check out the source code of the [testing module][stub_test] as an example.
 
 #### Negative Responses
 
@@ -1463,28 +1461,27 @@ disaster. For example, to divide by zero:
 ~~~
 
 This would lead to a real exception on the server side. Another way of
-triggering the negative response is to pass one of the predefined
-functions. These are:
+triggering a negative response is to pass one of the predefined functions:
 
-- `stub/invalid-request`,
-- `stub/not-found`,
-- `stub/invalid-params`,
-- `stub/internal-error`,
-- `stub/auth-error`,
+- `stub/invalid-request`
+- `stub/not-found`
+- `stub/invalid-params`
+- `stub/internal-error`
+- `stub/auth-error`
 
-and some others. Passing them will return an RPC error result. If you want to
-play the scenario when a user is not found on the server, compose the config:
+Passing them will return an RPC error result. If you want to play the scenario
+when a user is not authenticated on the server, compose the config:
 
 ~~~clojure
 (def config
   {:stub/handlers
-   {:user/get-by-id stub/not-found}})
+   {:user/get-by-id stub/auth-error}})
 ~~~
 
 ## HTTP Client
 
-This package is to communicate with an RPC Server by HTTP protocol. It relies on
-`clj-http` library for making HTTP requests. Add it to the project:
+The Client package is to communicate with an RPC Server by HTTP protocol. It
+relies on `clj-http` library for making HTTP requests. Add it to the project:
 
 ~~~clojure
 ;; deps
@@ -1506,7 +1503,7 @@ with the `make-client` function which accepts the config map:
 ~~~
 
 There is only one mandatory field in the config: the `:http/url` one which is
-the endpoint of the server. Other fields get default values.
+the endpoint of the server. Other fields have default values.
 
 For further experiments we will spawn a local Jetty RPC server and will work
 with it using the client.
