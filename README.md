@@ -1023,7 +1023,7 @@ have default values, so you can just pass the config to the `make-app` function:
   (http/make-app config))
 ~~~
 
-Now let's compose the HTTP request to the app:
+Now let's compose the HTTP request for the app:
 
 ~~~clojure
 (def rpc
@@ -1085,7 +1085,7 @@ Pay attention that the server **always** responds with the status code 200. This
 is the main deference from the REST approach. In RPC, HTTP is nothing else than
 just a transport layer. Its purpose is only to deliver messages without
 interfering into the pipeline. It's up to you how to check if the RPC response
-was correct or not. However, the HTTP client package (see below) prides an
+was correct or not. However, the HTTP client package (see below) provides an
 option to raise an exception in case of error response.
 
 #### Batch Requests in HTTP
@@ -1121,20 +1121,21 @@ Everything said above for batch requests also apply to HTTP as well.
 
 #### Configuration
 
-Here is a list of HTTP options the library support:
+Here is a list of HTTP options the library supports:
 
-- `:http/method` (default is `:post`) an HTTP method to listen. POST is the one
-  recommended by the RPC specification.
+- `:http/method` (default is `:post`) is an HTTP method to listen. POST is the
+  one recommended by the RPC specification.
 
 - `:http/path` (default is `"/"`) URI path to listen. You may specify something
   like `"/api"`, `"/rpc"` or similar.
 
 - `:http/health?` (default is `true`) whether or not the health endpoint is
-  available. When it is, `GET /health` or `GET /healthz` requests receive an
+  available. When true, `GET /health` or `GET /healthz` requests receive an
   empty `200 OK` response. This is useful for monitoring your server.
 
 - `:http/middleware` (default is the `farseer.http/default-middleware` vector) a
-  list of HTTP middleware to apply to the HTTP handler. See the next section.
+  list of HTTP middleware that get applied to the HTTP handler. See the next
+  section.
 
 #### Middleware & Authorization
 
@@ -1156,19 +1157,18 @@ status 200):
 ~~~
 
 Note: we use the `wrap-json-body` middleware but not `wrap-json-params` to make
-it work with batch requests. The the payload is not a map, it cannot be merged
-to the `:params` field.
+it work with batch requests. As the payload is not a map, it cannot be merged
+with the `:params` field.
 
 The `:http/middleware` parameter must be a vector of middleware. Each middleware
 is either a function or a vector of `[function, arg2, arg3, ...]`. In the second
 case, it will be applied to the handler as `(apply function handler arg2, arg3,
-...)`. For example, if a middleware takes additional params, you specify it like
-a vector `[middleware, params]`.
+...)`. For example, if a middleware takes additional params, you specify it as a
+vector `[middleware, params]`.
 
-By overriding the `:http/middleware` field, you can add your own logic to the HTTP
-pipeline. Here is a quick example how you protect the handler with Basic Auth:
-
-
+You can bring your own logic into the HTTP pipeline by overriding the
+`:http/middleware` field. Here is a quick example how you protect the handler
+with Basic Auth:
 
 ~~~clojure
 ;; ns imports
