@@ -74,7 +74,7 @@ documentation, and more.
 
 Briefly, JSON RPC is a protocol based on HTTP & JSON. When calling the server,
 you specify the method (procedure) name and its parameters. The parameters could
-be either a map of a vector. The server returns a JSON response with the
+be either a map or a vector. The server returns a JSON response with the
 `result` or `error` fields. For example:
 
 Request:
