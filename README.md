@@ -1735,14 +1735,14 @@ client and a vector of tasks. Each task is a pair of (method, params).
  {:id 84590 :jsonrpc "2.0" :result 7}]
 ~~~
 
-Some important notes on this:
+Some important notes on batches:
 
-- There will be only one HTTP request under the hood.
+- There will be only one HTTP request.
 
-- The order of the result maps always match the order of the initial tasks.
+- The order of the result maps always match the order of the tasks.
 
 - If one of the tasks fails, you'll get a negative map for it. The whole request
-  won't crush.
+  won't fail.
 
 ~~~clojure
 (client/batch client
@@ -1784,14 +1784,13 @@ task a notification, prepend its vector with the `^:rpc/notify` metadata tag:
 
 Clj-http offers a [connection manager][pool] for HTTP requests. It's a pool of
 open TCP connections. Sending requests within a pool is much faster then opening
-and closing new connection every time. The package provides some bits to handle
+and closing connections every time. The package provides some bits to handle
 connection manager for the client.
 
-The function `client/start-conn-mgr` takes either a config or a client and
-returns the same object with the new connection manager associated with it under
-the `:http/connection-manager` key. If you pass the result to the `client/call`
-function, it will take the manager into account, and the request will work
-faster.
+The function `client/start-conn-mgr` takes a client and returns it with the new
+connection manager associated under the `:http/connection-manager` key. If you
+pass the new client to the `client/call` function, it will take the manager into
+account, and the request will work faster.
 
 The function considers the keys which start with the `:conn-mgr/`
 namespace. These keys become a map of standard parameters for connection
@@ -1810,7 +1809,7 @@ manager.
 ~~~
 
 The opposite function `client/stop-conn-mgr` stops the manager (if present) and
-returns the object without the key.
+returns the client without the key.
 
 ~~~clojure
 (client/stop-conn-mgr client)
@@ -1818,8 +1817,7 @@ returns the object without the key.
 
 The macro `client/with-conn-mgr` enables the connection manager temporary. It
 takes a binding form and a block of code to execute. Inside the macro, the
-object bound to the first symbol from the vector form will carry the open
-manager.
+client is bound to the first symbol from the vector form.
 
 ~~~clojure
 ;; a client without a pool
@@ -1853,10 +1851,9 @@ connection pool for the client.
 
 ## Documentation Builder
 
-Perhaps you have already noticed that the config map for the server has enough
-data to be rendered as a document. It would be nice to pass it into a template
-and generate a file each time you build or the application. The Docs package
-services exactly this purpose.
+The config map for the server has enough data to be rendered as a document. It
+would be nice to pass it into a template and generate a file each time you build
+or the application. The Docs package serves exactly for this purpose.
 
 Add the `com.github.igrishaev/farseer-doc` library into your project:
 
@@ -1875,7 +1872,7 @@ place for this package.
 
 ### Configuration
 
-To generate the doc, you extend the server config with the keys that have
+To generate a doc file, you extend the server config with the keys that have
 `:doc/` namespace. Here is an example:
 
 ~~~clojure
@@ -1906,14 +1903,14 @@ To generate the doc, you extend the server config with the keys that have
      :handler/spec-out any?}}})
 ~~~
 
-Here is the list of the fields used for documentation.
+The the list of the fields used for documentation:
 
-- `:doc/title` (string). Describes either the API in general or an RPC method.
+- `:doc/title` (string). A title of an API or an RPC method.
 
-- `:doc/description` (string). A description of an API in or an RPC method.
+- `:doc/description` (string). A description of an API or an RPC method.
 
 - `:doc/resource` (string). A path to a resource with the detailed text with
-  examples, edge cases and so on. Useful when the text grows.
+  examples, edge cases and so on. Useful for large chunks of text.
 
 - `:doc/endpoint` (string). An URL of this RPC server.
 
@@ -1926,8 +1923,8 @@ Here is the list of the fields used for documentation.
 
 ### Building
 
-Not that you have a documentation-powered config, render it with the
-`generate-doc` function:
+Once you have a documentation-powered config, render it with the `generate-doc`
+function:
 
 ~~~clojure
 (doc/generate-doc
@@ -1942,9 +1939,9 @@ This function takes a config map, a resource template and a path of the output
 file. The Doc package provides the [default Markdown template][doc-default] which
 can be found by the path `"templates/farseer/default.md"`.
 
-In your project, most likely you create a `dev` namespace with a function that
-builds the documentation file. Every time the application gets built in CI, you
-generate a file and host it somewhere.
+In your project, most likely you create a `dev` namespace with this function
+that builds the documentation file. Every time the application gets run on CI,
+you generate a file and host it somewhere.
 
 ### Demo
 
@@ -1952,7 +1949,7 @@ generate a file and host it somewhere.
 
 You can checkout a [real demo][doc-demo] generated by the test module. The file
 lists all the non-ignored methods and their specs. The specs are put under
-dropdown items as sometimes they might be huge.
+collapsible items as sometimes they might be huge.
 
 ### Selmer & Context
 
@@ -1960,7 +1957,7 @@ dropdown items as sometimes they might be huge.
 
 The Doc package uses the great [Selmer library][selmer] which is inspired by
 Django Templates. You can pass your own template, and not only Markdown one, but
-HTML, AsciiDoc, or LaTeX. The template might carry any graphic elements, your
+HTML, AsciiDoc, or LaTeX. The template might have any graphic elements, your
 logo, JavaScript, and so on.
 
 The Doc package passes the config not directly but with transformation. Here is
@@ -2000,12 +1997,12 @@ vector of maps sorted according to the `:doc/sorting` option.
 
 The `:handler/spec-in` and `:handler/spec-out` fields get transformed to JSON
 Schema using the [Spec-tools][spec-tools] library. You may see the result of
-transformation in the context map above. For more control on transformation,
-check out [the manual page][json-schema] from the repository.
+transformation in the context map above. For more control of transformation,
+check out [the manual page][json-schema] from the Spec-tools repository.
 
-To render the spec in a template, there is a special filter `json-pretty`. It
-turns the Clojure data into a JSON string being well printed. To prevent quoting
-some symbols, add the `safe` filter to the end. Everything together gives the
+To render the spec in a template, use the `json-pretty` filter. It turns the
+Clojure data into a JSON string being well printed. To prevent quoting some
+symbols, add the `safe` filter to the end. Everything together gives the
 following snippet:
 
 ```jinja
@@ -2021,8 +2018,8 @@ following snippet:
 {% endif %}
 ```
 
-Pay attention to the empty lines before and after the JSON block. Without them,
-GitHub renders the content in a weird way.
+Pay attention to the empty lines before and after the JSON code block. Without
+them, GitHub renders the content in a weird way.
 
 ## Ideas & Further Development
 
@@ -2035,11 +2032,13 @@ It would be nice to:
   specify custom options for specific methods. For example, to enable batch
   requests in common, but disallow them for specific methods.
 
-- Develop a browser version of the client. The module would have the same
-  functions but rely on Js Fetch API.
+[fetch-api]:https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
 
-- Create a re-frame wrapper for this client. Instead of calling functions, one
-  triggers events.
+- Develop a browser version of the client. The module would rely on [Fetch
+  API][fetch-api].
+
+- Create a wrapper for re-frame. Instead of calling functions, one triggers
+  events.
 
 ## Author
 
