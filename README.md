@@ -1521,7 +1521,7 @@ with it using the client.
   (jetty/start-server config))
 ~~~
 
-Once you have the client, perform request with the `client/call` function. It
+Once you have the client, make a request with the `client/call` function. It
 accepts the client, method, and optional parameters.
 
 ~~~clojure
@@ -1531,8 +1531,8 @@ accepts the client, method, and optional parameters.
 ;; {:id 81081, :jsonrpc "2.0", :result 3}
 ~~~
 
-The parameters might be either a vector or map. Also, if the method doesn't
-accept parameters, you may skip it.
+The parameters might be either a vector or map. If the method doesn't accept
+parameters, you may omit them.
 
 ~~~clojure
 ;; map params
@@ -1574,46 +1574,47 @@ The following fields affect the client's behaviour.
 - `:rpc/fn-id` (default is `:id/int`) determines an algorithm for generating
   IDs. The `:id/int` value means an ID will be a random integer; `:id/uuid`
   stands for a random UUID. You can also pass a custom function of no arguments
-  that must return either integer or string.
+  that must return either an integer or a string.
 
-- `:rpc/ensure?` (default is `false`)
+- `:rpc/ensure?` (default is `false`) when false, return the body of the
+  response as is. When true, either return the `:result` field of the body or
+  throw an exception if the `:error` field presents (see below).
 
+- `:http/method` (default is `:post`) an HTTP method for request.
 
-- `:http/method` (default is `:post`)
+- `:http/headers` (default is `{:user-agent "farseer.client"}`) a map of HTTP
+  headers.
 
-- `:http/headers` (default is `{:user-agent "farseer.client"}`)
+- `:http/as` (default is `:json`) how to treat the response body.
 
-- `:http/as` (`:json`)
+- `:http/content-type` (`:json`) how to encode the request body.
 
-- `:http/content-type` (`:json`)
-
-As you have already guessed, the HTTP package takes into account all the keys
-prefixed with the `:http/` namespace. These are the standard Clj-http keys, .e.g
-`:http/socket-timeout`, `:http/throw-exceptions?` and others, so you configure
-the HTTP part as you want. When making a request, the client scans the config
-for the `:http/`-prefixed keys, selects them, removes the namespace and passes
-to the `clj-http/request` function as a map.
+The HTTP package takes into account all the keys prefixed with the `:http/`
+namespace. These are the standard Clj-http keys, .e.g `:http/socket-timeout`,
+`:http/throw-exceptions?` and others, so you configure the HTTP part as you
+want. When making a request, the client scans the config for the
+`:http/`-prefixed keys, selects them, removes the namespace and passes to the
+`clj-http/request` function as a map.
 
 The `:conn-mgr/` keys specify options for the connection manager:
 
-- `:conn-mgr/timeout`,
-- `:conn-mgr/threads`,
-- `:conn-mgr/default-per-route`,
-- `:conn-mgr/insecure?`,
+- `:conn-mgr/timeout`
+- `:conn-mgr/threads`
+- `:conn-mgr/default-per-route`
+- `:conn-mgr/insecure?`
 
-and others. The have the default values copied from Clj-http. The connection
+and others. They have default values copied from Clj-http. The connection
 manager is not created by default. You need to setup it manually (see below).
 
-#### Handling Response
+#### Handling Responses
 
-By default, the calling the server just returns the body of the HTTP
-response. Thus, it's up to you how to handle the `:result` and `:error`
-fields. But sometimes, the good old exception-based approach is better: you
-either get a result or an error pops up.
+By default, calling the server just returns the body of the HTTP response. It's
+up to you how to handle the `:result` and `:error` fields. Sometimes, the good
+old exception-based approach is convenient: you either get a result or an error
+pops up.
 
-The `:rpc/ensure?` option is exactly for that. When it's false (which is default
-behaviour), you just a parsed body of the HTTP response. When it's true, there
-is a following condition:
+The `:rpc/ensure?` option is exactly for that. When it's false, you get a parsed
+body of the HTTP response. When it's true, the following logic takes control:
 
 - for a positive response (no `:error` field) you'll get the content of the
   `:result` field. For example:
@@ -1630,7 +1631,7 @@ is a following condition:
 ;; 3
 ~~~
 
-For the error cases, you'll get an exception:
+For a negative response, you'll get an exception:
 
 ~~~clojure
 (client/call client :math/sum [1 "two"])
@@ -1655,7 +1656,7 @@ params
              client.clj:  179  farseer.client/call
 ~~~
 
-Pay attention that the `:rpc/ensure?` option doesn't affect batch requests (see
+At the moment, the `:rpc/ensure?` option doesn't affect batch requests (see
 below).
 
 #### Auth
@@ -1665,7 +1666,7 @@ below).
 Handling authentication for the client is simple. Clj-http [already
 covers][clj-http-auth] most of the authentication types, so you only need to
 pass proper options to the config. If the server is protected with Basic auth,
-you extend the config like this:
+you extend the config with the `:http/basic-auth` field:
 
 ~~~clojure
 (def config-client
@@ -1681,7 +1682,7 @@ For oAuth2, you pass another key:
    :http/oauth-token "***********"})
 ~~~
 
-If the server requires a constant token, you can specify it directly in headers:
+If the server requires a constant token, you put it directly into headers:
 
 ~~~clojure
 (def config-client
@@ -1691,8 +1692,8 @@ If the server requires a constant token, you can specify it directly in headers:
 
 Finally, the `:rpc/fn-before-send` parameter allows your to do everything with
 the request before it gets sent to the server. There might be a custom function
-which supplements the request with some custom headers that are calculated on
-the fly. For example:
+which supplements the request with additional headers that are calculated on the
+fly. For example:
 
 ~~~clojure
 (defn sign-request
@@ -1721,8 +1722,7 @@ same: the client, method, and optional params. The result will be `nil`.
 #### Batch Requests
 
 To send batch requests, there is the `client/batch` function. It takes the
-client and a vector of tasks. Each task is a pair of (method, params). Like
-this:
+client and a vector of tasks. Each task is a pair of (method, params).
 
 ~~~clojure
 (client/batch client
