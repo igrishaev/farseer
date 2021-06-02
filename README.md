@@ -590,17 +590,17 @@ it like this:
 
 An RPC request is a map of the following fields:
 
-- `:id`: either a number or a string value representing this request. The handler
+- `:id` is either a number or a string value representing this request. The handler
   must return the same id in response unless it was a notification (see below).
 
-- `:method`: either a string or a keyword (preferred) that specify the RPC
-  method. If the method was a string, it gets coerced to the keyword anyway. We
-  recommend using the full qualified keywords with namespaces. The namespaces
-  help to group methods by semantic.
+- `:method` is either a string or a keyword (the latter is preferred) that
+  specify the RPC method. If a method was a string, it gets coerced to the
+  keyword anyway. We recommend using the full qualified keywords with
+  namespaces. The namespaces help to group methods by semantic.
 
-- `:params`: either a map of [`keyword?`, `any?`] pairs, or a vector of `any?`
-  values (`sequential?` if more precisely). This field is optional as not all
-  the methods require arguments.
+- `:params` is either a map of [`keyword?`, `any?`] pairs, or a vector of `any?`
+  values (`sequential?`, if more precisely). This field is optional because some
+  methods don't require arguments.
 
 - `:jsonrpc`: a string with exact value `"2.0"`, the required one.
 
@@ -631,7 +631,7 @@ section below.
 #### Response
 
 The response is map with the `:id` and `:jsonrpc` fields. The ID is the same you
-passed in the request so you can match the response to the request by ID. If
+passed in the request so you can match the request and the response by ID. If
 the response was positive, its `:result` field carries the value that the RPC
 function returned:
 
@@ -639,12 +639,11 @@ function returned:
 {:id 1, :jsonrpc "2.0", :result 3}
 ~~~
 
-A negative response has no the `:result` fields but the `:error` one
-instead. The error node consists from the `:code` and `:message` fields which
-are the numeric code representing an error and a text message explaining it. In
-addition, there might be the `:data` fields which is an arbitrary map with some
-extra context. The library adds the `:method` field to the context
-automatically.
+A negative response has no the `:result` field but the `:error` one instead. The
+error node consists from the `:code` and `:message` fields which are the numeric
+code representing an error and a text message explaining it. In addition, there
+might be the `:data` fields which is an arbitrary map with some extra
+context. The library adds the `:method` field to the context automatically.
 
 ~~~clojure
 {:id 1
@@ -658,7 +657,7 @@ automatically.
 
 - `-32700 Parse error`: Used then the server gets a non-JSON/broken payload.
 
-- `-32600 Invalid Request`: The payload is JSON but has wrong shape.
+- `-32600 Invalid Request`: The payload is JSON but has a wrong shape.
 
 - `-32601 Method not found`: No such RPC method.
 
@@ -675,11 +674,10 @@ Find more information about the error codes [on this page][jsonrpc-spec].
 
 ### Notifications
 
-Sometimes, you're not interested in the response from an RPC server. Say, if
-you delete a user, there is nothing for you to return. In this case, you send a
-notification rather than a request. Notifications are formed similar but have
-no the `:id` field. When replying to the notification, the server returns
-nothing. For example:
+Sometimes, you're not interested in the response from an RPC server. Say, if you
+delete a user, there is nothing for you to return. In this case, you send a
+notification rather than a request. Notifications are formed similar but have no
+the `:id` field. The server sends nothing back for a notification. For example:
 
 ~~~clojure
 (handler {:method :math/sum
@@ -692,7 +690,8 @@ nil
 Notifications are useful to trigger some side effects on the server.
 
 Remember, if you pass a missing method or wrong input data (or any other error
-occurs), you'll get a negative response anyway:
+occurs), you'll get a negative response anyway despite the fact it was a
+notification:
 
 ~~~clojure
 (handler {:method :math/sum
@@ -710,7 +709,7 @@ occurs), you'll get a negative response anyway:
 Batch requests is the main feature of JSON RPC. It allows you to send multiple
 request maps in one call. The server executes the requests and returns a list of
 result maps. For example, you have a method `user/get-by-id` which takes a
-single ID and returns a map from the database. Now you got ten IDs. With
+single ID and returns a user map from the database. Now you got ten IDs. With
 ordinary REST API, you would run a cycle and performed ten HTTP calls. With RPC,
 you make a batch call.
 
@@ -793,9 +792,9 @@ response maps for notifications in the result vector:
 
 [pmap]: https://clojuredocs.org/clojure.core/pmap
 
-By default, Farseer uses the standard [`pmap` function][pmap]. It executes the
-tasks in semi-parallel way. Maybe in the future, we could use a custom fixed
-thread executor for more control.
+By default, Farseer uses the standard [`pmap` function][pmap] to deal with
+multiple tasks. It executes the tasks in semi-parallel way. Maybe in the future,
+we could use a custom fixed thread executor for more control.
 
 #### Configuring & Limiting Batch Requests
 
@@ -803,7 +802,7 @@ The following options help you to control batch requests:
 
 - `:rpc/batch-allowed?` (default is `true`): whether or not to allow batch
   requests. If you set this to `false` and someone performs a batch call, they
-  will get an error like this:
+  will get an error:
 
 ~~~clojure
 (def config
@@ -827,8 +826,8 @@ The following options help you to control batch requests:
 ~~~
 
 - `:rpc/batch-max-size` (default is 25): the max number of tasks in a single
-  batch request. Sending more tasks in one request that is allowed leads to an
-  error:
+  batch request. Sending more tasks than is allowed in one request would lead to
+  an error:
 
 ~~~clojure
 (def config
@@ -847,7 +846,7 @@ The following options help you to control batch requests:
 
 - `:rpc/batch-parallel?` (default is `true`): whether or not to prefer `pmap`
   over the standard `mapv` for tasks processing. When `false`, the tasks get
-  executed just one by one.
+  executed one by one.
 
 ### Errors & Exceptions
 
@@ -894,10 +893,60 @@ java.lang.ArithmeticException: Divide by zero
     ...
 ```
 
-#### Expected Errors
+#### RPC (Expected) Errors
 
-In the following cases, we expect to get a negative response (here are some
-examples):
+Sometimes, you know that you cannot serve the current request, and it must be
+failed. The easiest way to end up the request is to throw an exception. But to
+get a proper RPC response, there should be a special exception with the fields
+that take place in the response. The namespace `farseer.error` provides several
+functions for such exceptions.
+
+When an RPC handler catches an exception, it fetches its data using the
+`ex-data` function. Then it looks for some special fields to compose the
+response. Namely, these fields are:
+
+- `:rpc/code`: a number representing the error. When specified, it becomes the
+  `code` field of the error response.
+
+- `:rpc/message`: a string explaining the error. Becomes the `message` field of
+  the error response.
+
+- `:rpc/data`: a map with arbitrary data sent to the client. Becomes the `data`
+  field of the error response.
+
+- `:log/level`: a keyword representing the logging level of this error. Valid
+  values are those that the functions from `clojure.tools.logging` package
+  accept, e.g. `:debug`, `:info`, `:warn`, `:error`.
+
+- `:log/stacktrace?`: boolean, whether to log the entire stack trace or the
+  message only. Useful for "method not found" or "wrong input" cases because
+  there is no need for the full stack trace in such cases.
+
+The data fetched from the exception instance gets merged with the default error
+map declared in the `internal-error` variable:
+
+```clojure
+(def internal-error
+  {:log/level       :error
+   :log/stacktrace? true
+   :rpc/code        -32603
+   :rpc/message     "Internal error"})
+```
+
+Thus, if you didn't specify some of the fields, they would come from this map.
+
+#### Raising Exceptions
+
+There are some shortcut functions to simplify raising exceptions, namely:
+
+- `parse-error!`
+- `invalid-request!`
+- `not-found!`
+- `invalid-params!`
+- `internal-error!`
+- `auth-error!`
+
+Examples:
 
 - JSON parse error:
 
@@ -905,7 +954,7 @@ examples):
 (farseer.error/parse-error!)
 ```
 
-- RPC Method not found:
+- RPC Method is not found:
 
 ```clojure
 (farseer.error/not-found!
@@ -925,56 +974,8 @@ examples):
 (farseer.error/internal-error! nil caught-exception)
 ```
 
-#### Raising Exceptions
-
-The namespace `farseer.error` provides several functions for errors. Use them to
-throw exceptions to get an appropriate RPC response.
-
-Then RPC handler catches an exception, it gets the data using the `ex-data`
-function. Then it looks for some special fields to compose the
-response. Namely, these fields are:
-
-- `:rpc/code`: a number representing the error. When specified, it becomes the
-  `code` field of the error response.
-
-- `:rpc/message`: a string explaining the error. Becomes the `message` field of
-  the error response.
-
-- `:rpc/data`: a map with arbitrary data sent to the client. Becomes the `data`
-  field of the error response.
-
-- `:log/level`: a keyword meaning the logging level of this error. Valid values
-  are the those that the functions from `clojure.tools.logging` package accept,
-  e.g. `:debug`, `:info`, `:warn`, `:error`.
-
-- `:log/stacktrace?`: boolean, whether to log the entire stack trace or the
-  message only. Useful for "method not found" or "wrong input" cases because
-  there is no need for the full stack trace in such cases.
-
-The data fetched from the exception instance gets merged with the default error
-map declared in the `internal-error` variable:
-
-```clojure
-(def internal-error
-  {:log/level       :error
-   :log/stacktrace? true
-   :rpc/code        -32603
-   :rpc/message     "Internal error"})
-```
-
-Thus, if you didn't specify some of the fields, they come from this map.
-
-There are some shortcut functions to simplify raising exceptions, namely:
-
-- `parse-error!`
-- `invalid-request!`
-- `not-found!`
-- `invalid-params!`
-- `internal-error!`
-- `auth-error!`
-
-For all of them, the signature is `[& [data e]]` meaning that you can call the
-function even without arguments. Each function has its own default `data` map
+The signature of all these functions is `[& [data e]]` meaning that you can call
+a function even without arguments. Each function has its own default `data` map
 that gets merged to the `data` you passed. For example, these are default values
 for the `invalid-params!` function:
 
@@ -986,19 +987,21 @@ for the `invalid-params!` function:
    :rpc/message     "Invalid params"})
 ```
 
-The logging level is `:info` as this is expected behaviour plus we don't log the
-whole stack trace for the same reason.
+The logging level is `:info` because this is expected behaviour. We also we
+don't log the whole stack trace for the same reason.
 
 ### Configuration
 
 ## Ring HTTP Handler
 
-With this package you create an HTTP handler from your RPC configuration. The
-HTTP handler follows the official Ring protocol: it's a function that takes an
-HTTP request map and returns a response map. The handler uses JSON format for
-transport. It's already wrapped with Ring JSON middleware that decode and encode
-the request and response. You can pass other middleware stack to use something
-other that JSON, say MessagePack or EDN.
+[ring-json]: https://github.com/ring-clojure/ring-json
+
+The Ring package creates an HTTP handler from an RPC configuration. The HTTP
+handler follows the official Ring protocol: it's a function that takes an HTTP
+request map and returns a response map. The handler uses JSON format for
+transport. It's already wrapped with [Ring JSON middleware][ring-json] that
+decodes and encodes the payload. You can pass other middleware stack to use
+something other that JSON, say MessagePack or EDN.
 
 Add the package:
 
