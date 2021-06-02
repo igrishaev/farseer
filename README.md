@@ -85,7 +85,7 @@ Request:
 
 Response:
 
-~~~clojure
+~~~json
 {"jsonrpc": "2.0", "result": 3, "id": 3}
 ~~~
 
@@ -159,13 +159,13 @@ The "-all" bundle:
 - Lein:
 
 ```clojure
-[com.github.igrishaev/farseer-all "0.1.0"]
+[com.github.igrishaev/farseer-all "0.1.1"]
 ```
 
 - Deps.edn
 
 ```clojure
-com.github.igrishaev/farseer-all {:mvn/version "0.1.0"}
+com.github.igrishaev/farseer-all {:mvn/version "0.1.1"}
 ```
 
 - Maven
@@ -174,7 +174,7 @@ com.github.igrishaev/farseer-all {:mvn/version "0.1.0"}
 <dependency>
   <groupId>com.github.igrishaev</groupId>
   <artifactId>farseer-all</artifactId>
-  <version>0.1.0</version>
+  <version>0.1.1</version>
 </dependency>
 ```
 
@@ -183,8 +183,8 @@ Alternatevely, install only what you need:
 - Lein:
 
 ```clojure
-[com.github.igrishaev/farseer-http "0.1.0"]
-[com.github.igrishaev/farseer-client "0.1.0"]
+[com.github.igrishaev/farseer-http "0.1.1"]
+[com.github.igrishaev/farseer-client "0.1.1"]
 ```
 
 [com.github.igrishaev]: https://clojars.org/groups/com.github.igrishaev
