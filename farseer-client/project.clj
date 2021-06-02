@@ -24,7 +24,8 @@
     [[ch.qos.logback/logback-classic]]}
 
    :test
-   {:dependencies
+   {:resource-paths ["../dev-resources"]
+    :dependencies
     [[com.github.igrishaev/farseer-jetty]
      [com.stuartsierra/component]]}}
 
