@@ -1,4 +1,4 @@
-(defproject com.github.igrishaev/farseer-handler "0.1.1-SNAPSHOT"
+(defproject com.github.igrishaev/farseer-handler "0.1.1"
 
   :description
   "The basic, transport-agnostic RPC handler"

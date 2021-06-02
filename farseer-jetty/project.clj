@@ -1,4 +1,4 @@
-(defproject com.github.igrishaev/farseer-jetty "0.1.1-SNAPSHOT"
+(defproject com.github.igrishaev/farseer-jetty "0.1.1"
 
   :description
   "Jetty server for HTTP RPC handler"

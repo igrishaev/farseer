@@ -1,4 +1,4 @@
-(defproject com.github.igrishaev/farseer-doc "0.1.1-SNAPSHOT"
+(defproject com.github.igrishaev/farseer-doc "0.1.1"
 
   :description
   "Utilities to generate RPC documentation"

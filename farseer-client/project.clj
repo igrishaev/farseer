@@ -1,4 +1,4 @@
-(defproject com.github.igrishaev/farseer-client "0.1.1-SNAPSHOT"
+(defproject com.github.igrishaev/farseer-client "0.1.1"
 
   :description
   "HTTP client for RPC server"
