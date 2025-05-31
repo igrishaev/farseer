@@ -159,13 +159,13 @@ The "-all" bundle:
 - Lein:
 
 ```clojure
-[com.github.igrishaev/farseer-all "0.1.1"]
+[com.github.igrishaev/farseer-all "0.1.2"]
 ```
 
 - Deps.edn
 
 ```clojure
-com.github.igrishaev/farseer-all {:mvn/version "0.1.1"}
+com.github.igrishaev/farseer-all {:mvn/version "0.1.2"}
 ```
 
 - Maven
@@ -174,7 +174,7 @@ com.github.igrishaev/farseer-all {:mvn/version "0.1.1"}
 <dependency>
   <groupId>com.github.igrishaev</groupId>
   <artifactId>farseer-all</artifactId>
-  <version>0.1.1</version>
+  <version>0.1.2</version>
 </dependency>
 ```
 
@@ -183,8 +183,8 @@ Alternatevely, install only what you need:
 - Lein:
 
 ```clojure
-[com.github.igrishaev/farseer-http "0.1.1"]
-[com.github.igrishaev/farseer-client "0.1.1"]
+[com.github.igrishaev/farseer-http "0.1.2"]
+[com.github.igrishaev/farseer-client "0.1.2"]
 ```
 
 [com.github.igrishaev]: https://clojars.org/groups/com.github.igrishaev
