@@ -1,8 +1,11 @@
 
-sub-install:
+all: test install
+
+install:
 	lein sub install
 
-sub-test:
+.PHONY: test
+test:
 	lein sub test :all
 
 toc-install:
@@ -10,3 +13,6 @@ toc-install:
 
 toc-build:
 	node_modules/.bin/markdown-toc -i README.md
+
+release:
+	lein release

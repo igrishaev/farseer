@@ -135,7 +135,6 @@
            :remote-addr "127.0.0.1"
            :headers
            {"connection" "close"
-            "user-agent" "Apache-HttpClient/4.5.13 (Java/14.0.2)"
             "host" (format "127.0.0.1:%s" PORT)
             "accept-encoding" "gzip, deflate"
             "content-length" "48"
@@ -151,7 +150,8 @@
            :scheme :http
            :request-method :post}}
 
-         @capture))
+         (-> @capture
+             (update-in [:http/request :headers] dissoc "user-agent"))))
 
     (component/stop sys-started)))
 

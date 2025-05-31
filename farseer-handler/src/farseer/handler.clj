@@ -1,20 +1,18 @@
 (ns farseer.handler
   (:require
+   [clojure.spec.alpha :as s]
+   [clojure.string :as str]
+   [clojure.tools.logging :as log]
    [farseer.config :as config]
    [farseer.error :as e]
-
    [farseer.spec.handler :as spec.handler]
-   [farseer.spec.rpc :as spec.rpc]
-
-   [clojure.tools.logging :as log]
-
-   [clojure.spec.alpha :as s]))
+   [farseer.spec.rpc :as spec.rpc]))
 
 
 (defn explain-str [spec data]
   (let [out (s/explain-str spec data)]
-    (when-not (= out "Success!\n")
-      out)))
+    (when-not (str/starts-with? out "Success!")
+      (str/trim out))))
 
 
 (defn find-method

@@ -5,6 +5,9 @@
 
   :plugins [[lein-parent "0.3.8"]]
 
+  :dependencies
+  [[org.clojure/clojure]]
+
   :parent-project
   {:path "../project.clj"
    :inherit [:deploy-repositories

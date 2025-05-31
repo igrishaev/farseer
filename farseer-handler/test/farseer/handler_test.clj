@@ -1,9 +1,8 @@
 (ns farseer.handler-test
   (:require
-   [farseer.handler :refer [make-handler]]
-
    [clojure.spec.alpha :as s]
-   [clojure.test :refer [deftest is]]))
+   [clojure.test :refer [deftest is]]
+   [farseer.handler :as h]))
 
 
 (s/def :math/sum.in
@@ -65,7 +64,7 @@
              :method :math/sum
              :params [1 2]
              :jsonrpc "2.0"}
-        handler (make-handler config)
+        handler (h/make-handler config)
         response (handler rpc)]
 
     (is (= {:id 1 :jsonrpc "2.0" :result 3}
@@ -85,7 +84,7 @@
     (is (thrown-with-msg?
          clojure.lang.ExceptionInfo
          #"Spec assertion failed"
-         (make-handler config*)))))
+         (h/make-handler config*)))))
 
 
 (deftest test-handler-map-params
@@ -96,7 +95,7 @@
                       :age 35
                       :email "test@testc.com"}
              :jsonrpc "2.0"}
-        handler (make-handler config)
+        handler (h/make-handler config)
         response (handler rpc)]
 
     (is (= {:id 1
@@ -127,7 +126,7 @@
                   [:rpc/handlers :user/create :handler/spec-out]
                   :user/create.out-wrong)
 
-        handler (make-handler config*)
+        handler (h/make-handler config*)
 
         response (handler rpc)]
 
@@ -148,7 +147,7 @@
              :params [1 2]
              :jsonrpc "2.0"}
 
-        handler (make-handler config)
+        handler (h/make-handler config)
 
         response (handler rpc)]
 
@@ -162,7 +161,7 @@
              :params [1 nil]
              :jsonrpc "2.0"}
 
-        handler (make-handler config)
+        handler (h/make-handler config)
 
         response (handler rpc)]
 
@@ -173,7 +172,7 @@
           :error {:code -32602
                   :message "Invalid params"
                   :data {:method "math/sum"
-                         :explain "nil - failed: number? in: [1] at: [1] spec: :math/sum.in\n"}}}
+                         :explain "nil - failed: number? in: [1] at: [1] spec: :math/sum.in"}}}
 
          response))))
 
@@ -189,7 +188,7 @@
               :params [3 4]
               :jsonrpc "2.0"}]
 
-        handler (make-handler config)
+        handler (h/make-handler config)
 
         response (handler rpc)]
 
@@ -216,7 +215,7 @@
               :params [5 6]
               :jsonrpc "2.0"}]
 
-        handler (make-handler config)
+        handler (h/make-handler config)
 
         response (handler rpc)]
 
@@ -229,7 +228,7 @@
            {:code -32602
             :message "Invalid params"
             :data {:method "math/sum"
-                   :explain "nil - failed: number? in: [1] at: [1] spec: :math/sum.in\n"}}}
+                   :explain "nil - failed: number? in: [1] at: [1] spec: :math/sum.in"}}}
           {:id 3 :jsonrpc "2.0" :result 11}]
 
          response))))
@@ -251,7 +250,7 @@
                     (reset! capture args)
                     {:foo 1}))
 
-        handler (make-handler config {:this "foo"
+        handler (h/make-handler config {:this "foo"
                                       :that "bar"})
 
         response (handler rpc)
@@ -281,7 +280,7 @@
              :method :weird/arity-fn
              :params [1 2]
              :jsonrpc "2.0"}
-        handler (make-handler config)
+        handler (h/make-handler config)
         response (handler rpc)]
 
     (is (= {:error
@@ -293,6 +292,12 @@
 
            response))))
 
+(deftest test-explain-str
+  (is (nil?
+       (h/explain-str int? 1)))
+  (is (= "\"42\" - failed: int?"
+         (h/explain-str int? "42"))))
+
 
 ;; todo: check for coll?
 
@@ -303,7 +308,7 @@
   (let [rpc {:foo 42 :test "aa"}
 
         request {:body rpc}
-        handler (make-handler config)
+        handler (h/make-handler config)
 
         response (handler request)]
 
