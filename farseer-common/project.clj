@@ -1,4 +1,4 @@
-(defproject com.github.igrishaev/farseer-common "0.1.2-SNAPSHOT"
+(defproject com.github.igrishaev/farseer-common "0.1.2"
 
   :description
   "Common parts of the project"
