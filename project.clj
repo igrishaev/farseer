@@ -1,4 +1,4 @@
-(defproject com.github.igrishaev/farseer-all "0.1.2"
+(defproject com.github.igrishaev/farseer-all "0.1.3-SNAPSHOT"
 
   :description
   "JSON-RPC client and server with tools"

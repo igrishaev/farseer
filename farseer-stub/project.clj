@@ -1,4 +1,4 @@
-(defproject com.github.igrishaev/farseer-stub "0.1.2"
+(defproject com.github.igrishaev/farseer-stub "0.1.3-SNAPSHOT"
 
   :description
   "Local HTTP stub for RPC server"
